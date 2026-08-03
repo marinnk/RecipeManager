@@ -1,1 +1,1 @@
-# RecipeSearch
+# RecipeManager
