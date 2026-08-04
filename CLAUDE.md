@@ -10,6 +10,30 @@
    - 命名規則: `issue-<Issue番号>-<内容を表す短い英語>`（例: `issue-12-recipe-register-api`）
 3. **PR本文に `Closes #<Issue番号>` を記載する**
    - PRがマージされると、対応するIssueが自動でクローズされる
+4. **mainブランチは保護されている**
+   - GitHub上で直接push・force push・削除を禁止し、PR経由でのみマージできるよう設定済み（管理者にも適用）
+
+## コミットメッセージ規約
+
+[Conventional Commits](https://www.conventionalcommits.org/) 形式を採用する。
+
+| プレフィックス | 内容 |
+|----------------|------|
+| `feat:` | 新機能 |
+| `fix:` | バグ修正 |
+| `docs:` | ドキュメントのみの変更 |
+| `refactor:` | 挙動を変えないコードの整理 |
+| `test:` | テストの追加・修正 |
+| `chore:` | ビルド設定・依存関係など、上記に当てはまらない変更 |
+
+例: `feat: レシピ登録APIを実装`
+
+## Lint / フォーマッタ方針
+
+- バックエンド（Kotlin）: [ktlint](https://pinterest.github.io/ktlint/)
+- フロントエンド（TypeScript）: ESLint + Prettier
+
+開発環境構築のタイミングで導入し、CI（GitHub Actions）のテスト実行時に併せてチェックする。
 
 ## Claudeへの指示
 
