@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: backend
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:recipemanager}
+    username: ${DB_USERNAME:recipemanager}
+    password: ${DB_PASSWORD:recipemanager}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
