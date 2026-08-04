@@ -18,6 +18,7 @@ YouTubeやレシピサイトに掲載されているレシピを、自分用に�
 - [要件定義書](docs/requirements.md) — 何を作るか・なぜ作るか
 - [基本設計書](docs/basic-design.md) — どう作るか（技術スタック、構成図、画面設計、データ設計、API設計など）
 - [用語集](docs/glossary.md) — インフラ・クラウド関連の用語まとめ
+- [フロントエンド読み方メモ](docs/frontend-reading-notes.md) — Reactコードの読み方パターン（自分用）
 
 ## セットアップ
 
