@@ -21,4 +21,43 @@ YouTubeやレシピサイトに掲載されているレシピを、自分用に�
 
 ## セットアップ
 
-開発環境構築後に追記予定。
+### 前提
+
+- Java 21
+- Node.js 22
+- Docker Desktop
+
+### 手順
+
+```sh
+# 1. 環境変数ファイルを用意する
+cp .env.example .env
+
+# 2. DB（MySQL）を起動する
+docker compose up -d db
+
+# 3. バックエンド（Spring Boot）を起動する
+cd backend
+./gradlew bootRun
+# → http://localhost:8080
+
+# 4. フロントエンド（Next.js）を起動する（別ターミナル）
+cd frontend
+npm install
+npm run dev
+# → http://localhost:3000
+```
+
+### テスト・Lint
+
+```sh
+# バックエンド
+cd backend
+./gradlew ktlintCheck
+./gradlew test
+
+# フロントエンド
+cd frontend
+npm run lint
+npm run test
+```
