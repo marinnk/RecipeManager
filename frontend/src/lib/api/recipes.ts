@@ -1,0 +1,25 @@
+import type { ApiErrorBody, Recipe, RecipeInput } from "@/types/recipe";
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public body: ApiErrorBody,
+  ) {
+    super(body.message);
+  }
+}
+
+export async function createRecipe(input: RecipeInput): Promise<Recipe> {
+  const res = await fetch("/api/recipes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const body: ApiErrorBody = await res.json();
+    throw new ApiError(res.status, body);
+  }
+
+  return res.json();
+}
