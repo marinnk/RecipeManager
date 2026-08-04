@@ -1,0 +1,768 @@
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #f3f5ef;
+    --surface: #ffffff;
+    --surface-sunken: #ebeee5;
+    --ink: #22261f;
+    --ink-soft: #6b7166;
+    --border: #dde1d6;
+    --accent: #35603f;
+    --accent-strong: #24442f;
+    --accent-tint: #e5eee6;
+    --tag-bg: #fff1dc;
+    --tag-ink: #8a5a15;
+    --danger: #a13d3d;
+    --shadow: 0 1px 2px rgba(30, 40, 25, 0.06), 0 8px 24px rgba(30, 40, 25, 0.08);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161a14;
+      --surface: #1e231b;
+      --surface-sunken: #262b22;
+      --ink: #ecefe6;
+      --ink-soft: #9ba594;
+      --border: #333a2d;
+      --accent: #74ac81;
+      --accent-strong: #93c99f;
+      --accent-tint: #263229;
+      --tag-bg: #3a2e13;
+      --tag-ink: #e8b968;
+      --danger: #d98686;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #161a14;
+    --surface: #1e231b;
+    --surface-sunken: #262b22;
+    --ink: #ecefe6;
+    --ink-soft: #9ba594;
+    --border: #333a2d;
+    --accent: #74ac81;
+    --accent-strong: #93c99f;
+    --accent-tint: #263229;
+    --tag-bg: #3a2e13;
+    --tag-ink: #e8b968;
+    --danger: #d98686;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f5ef;
+    --surface: #ffffff;
+    --surface-sunken: #ebeee5;
+    --ink: #22261f;
+    --ink-soft: #6b7166;
+    --border: #dde1d6;
+    --accent: #35603f;
+    --accent-strong: #24442f;
+    --accent-tint: #e5eee6;
+    --tag-bg: #fff1dc;
+    --tag-ink: #8a5a15;
+    --danger: #a13d3d;
+    --shadow: 0 1px 2px rgba(30, 40, 25, 0.06), 0 8px 24px rgba(30, 40, 25, 0.08);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .display {
+    font-family: ui-serif, "Iowan Old Style", "Palatino Linotype", "Hiragino Mincho ProN", Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  button { font-family: inherit; }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .page > .intro {
+    margin-bottom: 1.5rem;
+  }
+
+  .intro h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .intro p {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+  .app-shell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chrome__dots { display: flex; gap: 0.4rem; }
+  .chrome__dots span {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--border);
+  }
+  .chrome__address {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .view-switcher {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.6rem 1rem 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .view-switcher button {
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    position: relative;
+    top: 1px;
+  }
+  .view-switcher button.is-active {
+    color: var(--accent-strong);
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--surface);
+    background: var(--surface);
+  }
+  .view-switcher button:not(.is-active):hover {
+    color: var(--ink);
+  }
+
+  .viewport {
+    min-height: 560px;
+    background: var(--surface);
+  }
+
+  .view { display: none; padding: 1.75rem; }
+  .view[data-active="true"] { display: block; }
+
+  /* --- list view --- */
+  .list-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .list-head h2 { font-size: 1.4rem; }
+  .list-head .eyebrow { display: block; margin-bottom: 0.2rem; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fdfdf8; }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--border); }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .btn-danger { background: transparent; color: var(--danger); border-color: var(--border); }
+  .btn-danger:hover { border-color: var(--danger); }
+
+  .search-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--ink);
+    font-size: 0.88rem;
+  }
+  .chip-filter {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .chip-filter.is-on {
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    background: var(--accent-tint);
+  }
+
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .recipe-card {
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    color: var(--ink);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .recipe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .thumb {
+    height: 108px;
+    position: relative;
+  }
+  .thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 75% 20%, rgba(255,255,255,0.35), transparent 55%);
+  }
+  .card-body { padding: 0.75rem 0.85rem 0.9rem; }
+  .card-body h3 { font-size: 0.98rem; margin-bottom: 0.4rem; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .tag {
+    font-size: 0.7rem;
+    background: var(--tag-bg);
+    color: var(--tag-ink);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--ink-soft);
+    padding: 3rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* --- form views (register / edit) --- */
+  .form-card { max-width: 480px; }
+  .form-card h2 { font-size: 1.3rem; margin-bottom: 1.25rem; }
+  .field { margin-bottom: 1.1rem; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 0.35rem;
+  }
+  .url-row { display: flex; gap: 0.5rem; }
+  .url-row input { flex: 1; }
+  input[type="text"], input[type="url"], textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 4.5rem; }
+  .hint { font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.35rem; }
+
+  .thumb-preview {
+    height: 120px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .tag-editor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .tag-editor .tag button {
+    border: none;
+    background: none;
+    color: inherit;
+    margin-left: 0.3rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .tag-add {
+    border: 1px dashed var(--border);
+    background: none;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* --- detail view --- */
+  .detail-back {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 1.1rem;
+  }
+  .detail-back:hover { color: var(--ink); }
+  .detail-hero {
+    height: 200px;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+  }
+  .detail-title { font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .detail-memo {
+    background: var(--surface-sunken);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin: 1.1rem 0;
+  }
+  .detail-memo .eyebrow { display: block; margin-bottom: 0.4rem; }
+  .source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--accent-strong);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .source-link:hover { border-color: var(--accent-strong); }
+  .detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    transition: transform 0.25s ease;
+    z-index: 10;
+  }
+  .toast.is-shown { transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recipe-card, .toast { transition: none; }
+  }
+
+  @media (max-width: 520px) {
+    .view { padding: 1.25rem; }
+    .list-head { flex-direction: column; }
+  }
+</style>
+
+<div class="page">
+  <div class="intro">
+    <span class="eyebrow">画面モックアップ</span>
+    <h1>RecipeManager</h1>
+    <p>要件定義書のワイヤーフレームを、実際にクリックして遷移を確認できる形にしたものです。上部タブか画面内のボタンで移動できます。データは仮のものです。</p>
+  </div>
+
+  <div class="app-shell">
+    <div class="chrome">
+      <div class="chrome__dots"><span></span><span></span><span></span></div>
+      <div class="chrome__address" id="address-bar">recipemanager.app/recipes</div>
+    </div>
+
+    <nav class="view-switcher" id="view-switcher">
+      <button data-goto="list" class="is-active">一覧</button>
+      <button data-goto="register">登録</button>
+      <button data-goto="detail">詳細</button>
+      <button data-goto="edit">編集</button>
+    </nav>
+
+    <main class="viewport">
+      <!-- LIST VIEW -->
+      <section class="view" data-view="list" data-active="true">
+        <div class="list-head">
+          <div>
+            <span class="eyebrow">マイレシピ</span>
+            <h2>保存したレシピ</h2>
+          </div>
+          <button class="btn btn-primary" data-goto="register">+ 新規登録</button>
+        </div>
+        <div class="search-row">
+          <input class="search-input" type="text" placeholder="キーワードで検索（例: 和食、簡単）" />
+          <button class="chip-filter is-on">すべて</button>
+          <button class="chip-filter">和食</button>
+          <button class="chip-filter">簡単</button>
+        </div>
+        <div class="recipe-grid" id="recipe-grid"></div>
+        <div class="empty-state" id="empty-state" hidden>まだレシピがありません。「+ 新規登録」から追加しましょう。</div>
+      </section>
+
+      <!-- REGISTER VIEW -->
+      <section class="view" data-view="register">
+        <div class="form-card">
+          <span class="eyebrow">新規登録</span>
+          <h2>レシピを登録</h2>
+          <div class="field">
+            <label for="reg-url">レシピのURL</label>
+            <div class="url-row">
+              <input id="reg-url" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+              <button class="btn btn-ghost" id="fetch-btn">取得</button>
+            </div>
+            <p class="hint">YouTubeやレシピサイトのURLを貼ると、タイトル・画像を自動取得します（このモックでは仮のデータが入ります）。</p>
+          </div>
+          <div class="field">
+            <label for="reg-title">タイトル</label>
+            <input id="reg-title" type="text" placeholder="レシピのタイトル" />
+          </div>
+          <div class="field">
+            <label>サムネイル</label>
+            <div class="thumb-preview" id="reg-thumb-preview" style="background:var(--surface-sunken); color:var(--ink-soft);">取得するとここに表示されます</div>
+          </div>
+          <div class="field">
+            <label for="reg-memo">メモ</label>
+            <textarea id="reg-memo" placeholder="味の感想や、次回作るときのコツなど"></textarea>
+          </div>
+          <div class="field">
+            <label>タグ</label>
+            <div class="tag-editor" id="reg-tags">
+              <button class="tag-add" id="reg-tag-add" type="button">+ タグを追加</button>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-ghost" data-goto="list">キャンセル</button>
+            <button class="btn btn-primary" id="reg-submit">登録する</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DETAIL VIEW -->
+      <section class="view" data-view="detail">
+        <button class="detail-back" data-goto="list">&larr; 一覧に戻る</button>
+        <div class="detail-hero" id="detail-hero"></div>
+        <h2 class="detail-title" id="detail-title">肉じゃが</h2>
+        <div class="tag-row" id="detail-tags"></div>
+        <div class="detail-memo">
+          <span class="eyebrow">メモ</span>
+          <span id="detail-memo-text">醤油を控えめにすると、じゃがいもの甘みが引き立って美味しい。</span>
+        </div>
+        <a class="source-link" href="#" id="detail-source" onclick="return false;">元のレシピを見る &#8599;</a>
+        <div class="detail-actions">
+          <button class="btn btn-danger" id="detail-delete">削除</button>
+          <button class="btn btn-ghost" id="detail-edit">編集</button>
+        </div>
+      </section>
+
+      <!-- EDIT VIEW -->
+      <section class="view" data-view="edit">
+        <div class="form-card">
+          <span class="eyebrow">編集</span>
+          <h2>レシピを編集</h2>
+          <div class="field">
+            <label for="edit-title">タイトル</label>
+            <input id="edit-title" type="text" />
+          </div>
+          <div class="field">
+            <label>サムネイル</label>
+            <div class="thumb-preview" id="edit-thumb-preview"></div>
+          </div>
+          <div class="field">
+            <label for="edit-memo">メモ</label>
+            <textarea id="edit-memo"></textarea>
+          </div>
+          <div class="field">
+            <label>タグ</label>
+            <div class="tag-editor" id="edit-tags"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-ghost" data-goto="detail">キャンセル</button>
+            <button class="btn btn-primary" id="edit-submit">更新する</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  (function () {
+    var gradients = [
+      "linear-gradient(135deg, #d98a3d, #a9542a)",
+      "linear-gradient(135deg, #e2b13c, #b5731f)",
+      "linear-gradient(135deg, #6f8f5c, #3d603f)",
+      "linear-gradient(135deg, #c65b4f, #8f3a35)",
+      "linear-gradient(135deg, #b98a5e, #7a5334)",
+      "linear-gradient(135deg, #7f9c6b, #4c6b45)"
+    ];
+
+    var recipes = [
+      { id: 1, title: "肉じゃが", tags: ["和食", "煮物"], memo: "醤油を控えめにすると、じゃがいもの甘みが引き立って美味しい。", url: "https://www.youtube.com/watch?v=sample1", source: "YouTube" },
+      { id: 2, title: "鶏の唐揚げ", tags: ["揚げ物", "お弁当"], memo: "下味に生姜を多めに入れると臭みが消える。二度揚げでカリッと。", url: "https://cookpad.com/recipe/sample2", source: "クックパッド" },
+      { id: 3, title: "味噌汁", tags: ["和食", "簡単"], memo: "出汁は煮干しから取ると香りが違う。", url: "https://www.youtube.com/watch?v=sample3", source: "YouTube" },
+      { id: 4, title: "ナポリタン", tags: ["洋食", "パスタ"], memo: "ケチャップを先に炒めて酸味を飛ばすのがコツ。", url: "https://cookpad.com/recipe/sample4", source: "クックパッド" },
+      { id: 5, title: "麻婆豆腐", tags: ["中華", "ピリ辛"], memo: "花椒を仕上げにひと振りすると香りが立つ。", url: "https://www.youtube.com/watch?v=sample5", source: "YouTube" },
+      { id: 6, title: "卵焼き", tags: ["和食", "お弁当"], memo: "だしを入れすぎると巻きにくいので少なめに。", url: "https://cookpad.com/recipe/sample6", source: "クックパッド" }
+    ];
+
+    var nextId = recipes.length + 1;
+    var currentDetailId = null;
+    var addresses = {
+      list: "recipemanager.app/recipes",
+      register: "recipemanager.app/recipes/new",
+      detail: "recipemanager.app/recipes/:id",
+      edit: "recipemanager.app/recipes/:id/edit"
+    };
+
+    var grid = document.getElementById("recipe-grid");
+    var emptyState = document.getElementById("empty-state");
+    var addressBar = document.getElementById("address-bar");
+
+    function gradientFor(id) {
+      return gradients[(id - 1) % gradients.length];
+    }
+
+    function renderGrid() {
+      grid.innerHTML = "";
+      emptyState.hidden = recipes.length > 0;
+      recipes.forEach(function (r) {
+        var card = document.createElement("button");
+        card.className = "recipe-card";
+        card.setAttribute("data-open-detail", r.id);
+        card.innerHTML =
+          '<div class="thumb" style="background:' + gradientFor(r.id) + '"></div>' +
+          '<div class="card-body"><h3>' + r.title + '</h3><div class="tag-row">' +
+          r.tags.map(function (t) { return '<span class="tag">#' + t + '</span>'; }).join("") +
+          '</div></div>';
+        grid.appendChild(card);
+      });
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("is-shown");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(function () {
+        toast.classList.remove("is-shown");
+      }, 1800);
+    }
+
+    function goto(view) {
+      document.querySelectorAll(".view").forEach(function (v) {
+        v.dataset.active = v.dataset.view === view ? "true" : "false";
+      });
+      document.querySelectorAll("#view-switcher button").forEach(function (b) {
+        b.classList.toggle("is-active", b.dataset.goto === view);
+      });
+      addressBar.textContent = addresses[view] || "recipemanager.app";
+    }
+
+    function openDetail(id) {
+      var r = recipes.find(function (x) { return x.id === Number(id); });
+      if (!r) return;
+      currentDetailId = r.id;
+      document.getElementById("detail-hero").style.background = gradientFor(r.id);
+      document.getElementById("detail-title").textContent = r.title;
+      document.getElementById("detail-memo-text").textContent = r.memo;
+      document.getElementById("detail-source").textContent = "元のレシピを見る（" + r.source + "）↗";
+      document.getElementById("detail-tags").innerHTML = r.tags.map(function (t) {
+        return '<span class="tag">#' + t + '</span>';
+      }).join("");
+      goto("detail");
+    }
+
+    function renderTagEditor(container, tags) {
+      container.innerHTML = "";
+      tags.forEach(function (t, i) {
+        var chip = document.createElement("span");
+        chip.className = "tag";
+        chip.innerHTML = "#" + t + " <button type='button' data-remove-tag='" + i + "'>&times;</button>";
+        container.appendChild(chip);
+      });
+      var addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "tag-add";
+      addBtn.textContent = "+ タグを追加";
+      addBtn.dataset.addTag = "1";
+      container.appendChild(addBtn);
+    }
+
+    var regTags = ["和食", "簡単"];
+    renderTagEditor(document.getElementById("reg-tags"), regTags);
+
+    document.addEventListener("click", function (e) {
+      var gotoBtn = e.target.closest("[data-goto]");
+      if (gotoBtn) { goto(gotoBtn.dataset.goto); return; }
+
+      var card = e.target.closest("[data-open-detail]");
+      if (card) { openDetail(card.getAttribute("data-open-detail")); return; }
+
+      if (e.target.id === "detail-edit") {
+        var r = recipes.find(function (x) { return x.id === currentDetailId; });
+        document.getElementById("edit-title").value = r.title;
+        document.getElementById("edit-memo").value = r.memo;
+        document.getElementById("edit-thumb-preview").style.background = gradientFor(r.id);
+        renderTagEditor(document.getElementById("edit-tags"), r.tags.slice());
+        goto("edit");
+        return;
+      }
+
+      if (e.target.id === "detail-delete") {
+        recipes = recipes.filter(function (x) { return x.id !== currentDetailId; });
+        renderGrid();
+        showToast("レシピを削除しました");
+        goto("list");
+        return;
+      }
+
+      if (e.target.id === "fetch-btn") {
+        document.getElementById("reg-title").value = "オムライス";
+        document.getElementById("reg-thumb-preview").style.background = gradientFor(2);
+        document.getElementById("reg-thumb-preview").style.color = "rgba(255,255,255,0.9)";
+        document.getElementById("reg-thumb-preview").textContent = "取得したサムネイル（例）";
+        showToast("タイトル・サムネイルを取得しました（モック）");
+        return;
+      }
+
+      if (e.target.id === "reg-submit") {
+        var title = document.getElementById("reg-title").value || "無題のレシピ";
+        var memo = document.getElementById("reg-memo").value;
+        recipes.unshift({ id: nextId++, title: title, tags: regTags.slice(), memo: memo || "（メモなし）", url: "#", source: "登録したURL" });
+        renderGrid();
+        showToast("レシピを登録しました");
+        document.getElementById("reg-title").value = "";
+        document.getElementById("reg-memo").value = "";
+        document.getElementById("reg-url").value = "";
+        document.getElementById("reg-thumb-preview").style.background = "var(--surface-sunken)";
+        document.getElementById("reg-thumb-preview").style.color = "var(--ink-soft)";
+        document.getElementById("reg-thumb-preview").textContent = "取得するとここに表示されます";
+        goto("list");
+        return;
+      }
+
+      if (e.target.id === "edit-submit") {
+        var idx = recipes.findIndex(function (x) { return x.id === currentDetailId; });
+        if (idx > -1) {
+          recipes[idx].title = document.getElementById("edit-title").value || recipes[idx].title;
+          recipes[idx].memo = document.getElementById("edit-memo").value || recipes[idx].memo;
+        }
+        renderGrid();
+        showToast("レシピを更新しました");
+        openDetail(currentDetailId);
+        return;
+      }
+
+      if (e.target.dataset.addTag) {
+        var name = prompt("追加するタグ名を入力してください");
+        if (name) {
+          var container = e.target.parentElement;
+          if (container.id === "reg-tags") {
+            regTags.push(name);
+            renderTagEditor(container, regTags);
+          } else {
+            var r2 = recipes.find(function (x) { return x.id === currentDetailId; });
+            var tags = r2 ? r2.tags : [];
+            tags.push(name);
+            renderTagEditor(container, tags);
+          }
+        }
+        return;
+      }
+
+      if (e.target.dataset.removeTag !== undefined) {
+        var container2 = e.target.closest(".tag-editor");
+        var i2 = Number(e.target.dataset.removeTag);
+        if (container2.id === "reg-tags") {
+          regTags.splice(i2, 1);
+          renderTagEditor(container2, regTags);
+        }
+        return;
+      }
+    });
+
+    renderGrid();
+  })();
+</script>
