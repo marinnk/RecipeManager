@@ -1,0 +1,57 @@
+"use client";
+
+import { useRecipes } from "@/hooks/useRecipes";
+import styles from "./RecipeList.module.css";
+
+export function RecipeList() {
+  const { recipes, isLoading, error } = useRecipes();
+
+  if (isLoading) {
+    return <p>読み込み中…</p>;
+  }
+
+  if (error) {
+    return (
+      <p role="alert" className={styles.error}>
+        {error}
+      </p>
+    );
+  }
+
+  if (recipes.length === 0) {
+    return (
+      <p className={styles.empty}>
+        レシピがありません。まずは登録しましょう。
+      </p>
+    );
+  }
+
+  return (
+    <ul className={styles.grid}>
+      {recipes.map((recipe) => (
+        <li key={recipe.id} className={styles.card}>
+          {recipe.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={recipe.thumbnailUrl}
+              alt=""
+              className={styles.thumbnail}
+            />
+          ) : (
+            <div className={styles.thumbnailPlaceholder} />
+          )}
+          <div className={styles.body}>
+            <h3 className={styles.title}>{recipe.title}</h3>
+            <div className={styles.tagList}>
+              {recipe.tags.map((tag) => (
+                <span key={tag} className={styles.tagChip}>
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}

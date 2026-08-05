@@ -17,6 +17,36 @@ class RecipeServiceTest {
     private val recipeService = RecipeService(recipeRepository, tagRepository)
 
     @Test
+    fun `登録済みレシピを作成日時の新しい順で返す`() {
+        val older =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+                createdAt = Instant.parse("2026-08-01T10:00:00Z")
+                updatedAt = Instant.parse("2026-08-01T10:00:00Z")
+            }
+        val newer =
+            Recipe(title = "唐揚げ", url = "https://www.youtube.com/watch?v=yyyy").apply {
+                id = 2L
+                createdAt = Instant.parse("2026-08-02T10:00:00Z")
+                updatedAt = Instant.parse("2026-08-02T10:00:00Z")
+            }
+        every { recipeRepository.findAllByOrderByCreatedAtDesc() } returns listOf(newer, older)
+
+        val response = recipeService.findAll()
+
+        assertEquals(listOf("唐揚げ", "肉じゃが"), response.map { it.title })
+    }
+
+    @Test
+    fun `レシピが0件のとき空リストを返す`() {
+        every { recipeRepository.findAllByOrderByCreatedAtDesc() } returns emptyList()
+
+        val response = recipeService.findAll()
+
+        assertEquals(emptyList<Any>(), response)
+    }
+
+    @Test
     fun `登録するとタイトル・URL・タグを持つレシピが保存される`() {
         val request =
             RecipeCreateRequest(

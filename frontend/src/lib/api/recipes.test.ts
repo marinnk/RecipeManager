@@ -1,5 +1,48 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, createRecipe } from "./recipes";
+import { ApiError, createRecipe, getRecipes } from "./recipes";
+
+describe("getRecipes", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  it("GET /api/recipesを呼び出し、成功時はレシピの配列を返す", async () => {
+    const recipes = [
+      {
+        id: 1,
+        title: "肉じゃが",
+        url: "https://example.com",
+        thumbnailUrl: null,
+        memo: null,
+        tags: ["和食"],
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      },
+    ];
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify(recipes), { status: 200 }),
+    );
+
+    const result = await getRecipes();
+
+    expect(fetch).toHaveBeenCalledWith("/api/recipes");
+    expect(result).toEqual(recipes);
+  });
+
+  it("失敗時はレスポンスの内容を持つApiErrorをthrowする", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({ error: "INTERNAL_ERROR", message: "取得に失敗しました" }),
+        { status: 500 },
+      ),
+    );
+
+    await expect(getRecipes()).rejects.toMatchObject({
+      status: 500,
+      body: { error: "INTERNAL_ERROR", message: "取得に失敗しました" },
+    } satisfies Partial<ApiError>);
+  });
+});
 
 describe("createRecipe", () => {
   beforeEach(() => {

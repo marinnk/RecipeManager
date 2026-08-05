@@ -12,6 +12,9 @@ class RecipeService(
     private val recipeRepository: RecipeRepository,
     private val tagRepository: TagRepository,
 ) {
+    @Transactional(readOnly = true)
+    fun findAll(): List<RecipeResponse> = recipeRepository.findAllByOrderByCreatedAtDesc().map { RecipeResponse.from(it) }
+
     @Transactional
     fun create(request: RecipeCreateRequest): RecipeResponse {
         val recipe =
