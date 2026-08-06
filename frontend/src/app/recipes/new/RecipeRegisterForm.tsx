@@ -35,7 +35,9 @@ export function RecipeRegisterForm() {
   };
 
   const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    // IME変換確定のEnterでも"Enter"イベントが発火するため、isComposingで
+    // 変換中かどうかを判定し、変換確定のEnterではタグを追加しないようにする。
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
       e.preventDefault();
       addTag();
     }
@@ -144,6 +146,7 @@ export function RecipeRegisterForm() {
             + 追加
           </button>
         </div>
+        <p className={styles.tagHint}>Enterキーでも追加できます</p>
       </div>
 
       {(uploadError || error) && (

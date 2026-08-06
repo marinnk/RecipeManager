@@ -49,6 +49,12 @@
   flex: 1;
 }
 
+.tagHint {
+  margin: 0;
+  color: #666;
+  font-size: 0.8125rem;
+}
+
 .thumbnailPreview {
   width: 8rem;
   height: 4.5rem;
