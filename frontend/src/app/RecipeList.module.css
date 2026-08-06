@@ -52,6 +52,11 @@
   font-size: 0.875rem;
 }
 
+.editLink {
+  align-self: flex-start;
+  font-size: 0.875rem;
+}
+
 .empty {
   color: #666;
 }

@@ -1,6 +1,7 @@
 package com.recipemanager.backend.common.error
 
 import com.recipemanager.backend.image.InvalidImageFileException
+import com.recipemanager.backend.recipe.RecipeNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -32,4 +33,10 @@ class GlobalExceptionHandler {
         ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(error = "VALIDATION_ERROR", message = "画像ファイルは8MB以下にしてください"))
+
+    @ExceptionHandler(RecipeNotFoundException::class)
+    fun handleRecipeNotFound(ex: RecipeNotFoundException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(error = "NOT_FOUND", message = ex.message ?: "レシピが見つかりません"))
 }

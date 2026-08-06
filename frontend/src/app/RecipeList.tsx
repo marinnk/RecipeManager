@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRecipes } from "@/hooks/useRecipes";
 import styles from "./RecipeList.module.css";
 
@@ -49,6 +50,9 @@ export function RecipeList() {
                 </span>
               ))}
             </div>
+            <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
+              編集
+            </Link>
           </div>
         </li>
       ))}
