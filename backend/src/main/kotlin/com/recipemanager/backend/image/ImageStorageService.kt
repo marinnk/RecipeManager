@@ -20,6 +20,12 @@ class ImageStorageService(
         }
         val extension = extensionFor(file.contentType)
 
+        // 元のファイル名（例: photo.jpg）はそのまま使わず、UUIDで採番する。
+        // スマホのカメラは連番でファイル名を付けるため、機種変更等で同じファイル名が
+        // 再度アップロードされることがある。元のファイル名をそのまま保存先に使うと、
+        // transferTo()は既存ファイルがあっても無警告で上書きしてしまうため、
+        // 別のレシピの画像が後から書き換えられてしまう（エラーにはならず、
+        // 一覧画面で気づかないうちに違う画像が表示されるようになる）。
         val filename = "${UUID.randomUUID()}.$extension"
         val root = Paths.get(uploadDir).toAbsolutePath().normalize()
         Files.createDirectories(root)
