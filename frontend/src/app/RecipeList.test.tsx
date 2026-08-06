@@ -41,6 +41,10 @@ describe("RecipeList", () => {
     expect(screen.getByText("肉じゃが")).toBeInTheDocument();
     expect(screen.getByText("#和食")).toBeInTheDocument();
     expect(screen.getByText("#煮物")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "編集" })).toHaveAttribute(
+      "href",
+      "/recipes/1/edit",
+    );
   });
 
   it("レシピが0件の場合は空状態を表示する", () => {

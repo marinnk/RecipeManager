@@ -2,24 +2,59 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
-import { useCreateRecipe } from "@/hooks/useCreateRecipe";
+import { useRecipe } from "@/hooks/useRecipe";
+import { useUpdateRecipe } from "@/hooks/useUpdateRecipe";
 import { useUploadImage } from "@/hooks/useUploadImage";
-import styles from "./RecipeRegisterForm.module.css";
+import type { Recipe } from "@/types/recipe";
+import styles from "./RecipeEditForm.module.css";
 
-export function RecipeRegisterForm() {
+type Props = {
+  recipeId: number;
+};
+
+export function RecipeEditForm({ recipeId }: Props) {
+  const { recipe, isLoading, error: loadError } = useRecipe(recipeId);
+
+  if (isLoading) {
+    return <p>読み込み中…</p>;
+  }
+
+  if (loadError || !recipe) {
+    return (
+      <p role="alert" className={styles.error}>
+        {loadError}
+      </p>
+    );
+  }
+
+  // 取得済みのレシピをkeyに使い、レシピが切り替わったときにフォームの内部状態を
+  // 初期値からやり直させる（recipeが変わるたびにuseEffectでsetStateし直すよりも、
+  // Reactの推奨パターンである「keyでコンポーネントを再マウントする」方が素直なため）。
+  return <RecipeEditFormFields key={recipe.id} recipeId={recipeId} recipe={recipe} />;
+}
+
+type FieldsProps = {
+  recipeId: number;
+  recipe: Recipe;
+};
+
+function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
   const router = useRouter();
-  const { submit, isSubmitting, error } = useCreateRecipe();
+  const { submit, isSubmitting, error } = useUpdateRecipe();
   const {
     submit: uploadThumbnail,
     isUploading,
     error: uploadError,
   } = useUploadImage();
 
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState(recipe.title);
+  const [url, setUrl] = useState(recipe.url);
+  // 既存のサムネイルURLはユーザーが直接編集する項目ではなく、新しい画像が
+  // 選択された場合のみ送信時に上書きされるので、setterを持たない定数として扱う。
+  const thumbnailUrl = recipe.thumbnailUrl ?? undefined;
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [memo, setMemo] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [memo, setMemo] = useState(recipe.memo ?? "");
+  const [tags, setTags] = useState<string[]>(recipe.tags);
   const [tagDraft, setTagDraft] = useState("");
 
   const addTag = () => {
@@ -50,24 +85,24 @@ export function RecipeRegisterForm() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let thumbnailUrl: string | undefined;
+    let nextThumbnailUrl = thumbnailUrl;
     if (thumbnailFile) {
       const uploaded = await uploadThumbnail(thumbnailFile);
       if (!uploaded) {
         // アップロード失敗時はここで中断する。エラーはuseUploadImageが保持している。
         return;
       }
-      thumbnailUrl = uploaded.url;
+      nextThumbnailUrl = uploaded.url;
     }
 
-    const recipe = await submit({
+    const updated = await submit(recipeId, {
       title,
       url,
-      thumbnailUrl,
+      thumbnailUrl: nextThumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
     });
-    if (recipe) {
+    if (updated) {
       router.push("/");
     }
   };
@@ -98,6 +133,14 @@ export function RecipeRegisterForm() {
 
       <div className={styles.field}>
         <label htmlFor="thumbnailFile">サムネイル画像（任意）</label>
+        {!thumbnailFile && thumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className={styles.thumbnailPreview}
+          />
+        )}
         <input
           id="thumbnailFile"
           type="file"
@@ -160,7 +203,7 @@ export function RecipeRegisterForm() {
           キャンセル
         </button>
         <button type="submit" disabled={isSubmitting || isUploading}>
-          {isSubmitting || isUploading ? "登録中…" : "登録する"}
+          {isSubmitting || isUploading ? "更新中…" : "更新する"}
         </button>
       </div>
     </form>

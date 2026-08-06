@@ -2,6 +2,7 @@ package com.recipemanager.backend.recipe
 
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeResponse
+import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
 import com.recipemanager.backend.tag.Tag
 import com.recipemanager.backend.tag.TagRepository
 import org.springframework.stereotype.Service
@@ -15,6 +16,12 @@ class RecipeService(
     @Transactional(readOnly = true)
     fun findAll(): List<RecipeResponse> = recipeRepository.findAllByOrderByCreatedAtDesc().map { RecipeResponse.from(it) }
 
+    @Transactional(readOnly = true)
+    fun findById(id: Long): RecipeResponse {
+        val recipe = recipeRepository.findById(id).orElseThrow { RecipeNotFoundException(id) }
+        return RecipeResponse.from(recipe)
+    }
+
     @Transactional
     fun create(request: RecipeCreateRequest): RecipeResponse {
         val recipe =
@@ -24,6 +31,22 @@ class RecipeService(
                 thumbnailUrl = request.thumbnailUrl,
                 memo = request.memo,
             )
+        recipe.tags = resolveTags(request.tags)
+
+        val saved = recipeRepository.save(recipe)
+        return RecipeResponse.from(saved)
+    }
+
+    @Transactional
+    fun update(
+        id: Long,
+        request: RecipeUpdateRequest,
+    ): RecipeResponse {
+        val recipe = recipeRepository.findById(id).orElseThrow { RecipeNotFoundException(id) }
+        recipe.title = request.title
+        recipe.url = request.url
+        recipe.thumbnailUrl = request.thumbnailUrl
+        recipe.memo = request.memo
         recipe.tags = resolveTags(request.tags)
 
         val saved = recipeRepository.save(recipe)

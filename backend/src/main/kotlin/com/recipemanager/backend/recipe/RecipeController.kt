@@ -2,11 +2,14 @@ package com.recipemanager.backend.recipe
 
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeResponse
+import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -19,6 +22,11 @@ class RecipeController(
     @GetMapping
     fun list(): ResponseEntity<List<RecipeResponse>> = ResponseEntity.ok(recipeService.findAll())
 
+    @GetMapping("/{id}")
+    fun get(
+        @PathVariable id: Long,
+    ): ResponseEntity<RecipeResponse> = ResponseEntity.ok(recipeService.findById(id))
+
     @PostMapping
     fun create(
         @Valid @RequestBody request: RecipeCreateRequest,
@@ -26,4 +34,10 @@ class RecipeController(
         val response = recipeService.create(request)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
+
+    @PutMapping("/{id}")
+    fun update(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: RecipeUpdateRequest,
+    ): ResponseEntity<RecipeResponse> = ResponseEntity.ok(recipeService.update(id, request))
 }
