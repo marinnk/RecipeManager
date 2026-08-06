@@ -9,6 +9,17 @@ export class ApiError extends Error {
   }
 }
 
+export async function getRecipes(): Promise<Recipe[]> {
+  const res = await fetch("/api/recipes");
+
+  if (!res.ok) {
+    const body: ApiErrorBody = await res.json();
+    throw new ApiError(res.status, body);
+  }
+
+  return res.json();
+}
+
 export async function createRecipe(input: RecipeInput): Promise<Recipe> {
   const res = await fetch("/api/recipes", {
     method: "POST",
