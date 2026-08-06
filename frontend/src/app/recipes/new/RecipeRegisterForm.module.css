@@ -49,6 +49,19 @@
   flex: 1;
 }
 
+.thumbnailPreview {
+  width: 8rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.uploadStatus {
+  color: #666;
+  font-size: 0.875rem;
+}
+
 .error {
   color: #c0392b;
 }

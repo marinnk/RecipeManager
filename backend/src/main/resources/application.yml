@@ -12,3 +12,11 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 8MB
+
+app:
+  upload:
+    dir: ${UPLOAD_DIR:uploads}

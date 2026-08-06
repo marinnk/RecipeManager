@@ -1,17 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useCreateRecipe } from "@/hooks/useCreateRecipe";
+import { useUploadImage } from "@/hooks/useUploadImage";
 import styles from "./RecipeRegisterForm.module.css";
 
 export function RecipeRegisterForm() {
   const router = useRouter();
   const { submit, isSubmitting, error } = useCreateRecipe();
+  const {
+    submit: uploadThumbnail,
+    isUploading,
+    error: uploadError,
+  } = useUploadImage();
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
@@ -35,12 +41,27 @@ export function RecipeRegisterForm() {
     }
   };
 
+  const handleThumbnailFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setThumbnailFile(e.target.files?.[0] ?? null);
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    let thumbnailUrl: string | undefined;
+    if (thumbnailFile) {
+      const uploaded = await uploadThumbnail(thumbnailFile);
+      if (!uploaded) {
+        // アップロード失敗時はここで中断する。エラーはuseUploadImageが保持している。
+        return;
+      }
+      thumbnailUrl = uploaded.url;
+    }
+
     const recipe = await submit({
       title,
       url,
-      thumbnailUrl: thumbnailUrl.trim() || undefined,
+      thumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
     });
@@ -74,13 +95,16 @@ export function RecipeRegisterForm() {
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="thumbnailUrl">サムネイルURL（任意）</label>
+        <label htmlFor="thumbnailFile">サムネイル画像（任意）</label>
         <input
-          id="thumbnailUrl"
-          type="url"
-          value={thumbnailUrl}
-          onChange={(e) => setThumbnailUrl(e.target.value)}
+          id="thumbnailFile"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleThumbnailFileChange}
         />
+        {isUploading && (
+          <p className={styles.uploadStatus}>アップロード中…</p>
+        )}
       </div>
 
       <div className={styles.field}>
@@ -122,9 +146,9 @@ export function RecipeRegisterForm() {
         </div>
       </div>
 
-      {error && (
+      {(uploadError || error) && (
         <p role="alert" className={styles.error}>
-          {error}
+          {uploadError || error}
         </p>
       )}
 
@@ -132,8 +156,8 @@ export function RecipeRegisterForm() {
         <button type="button" onClick={() => router.push("/")}>
           キャンセル
         </button>
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "登録中…" : "登録する"}
+        <button type="submit" disabled={isSubmitting || isUploading}>
+          {isSubmitting || isUploading ? "登録中…" : "登録する"}
         </button>
       </div>
     </form>
