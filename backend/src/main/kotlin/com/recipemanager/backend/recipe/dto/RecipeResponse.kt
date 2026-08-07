@@ -6,7 +6,7 @@ import java.time.Instant
 data class RecipeResponse(
     val id: Long,
     val title: String,
-    val url: String,
+    val url: String?,
     val thumbnailUrl: String?,
     val memo: String?,
     val tags: List<String>,

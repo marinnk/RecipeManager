@@ -44,7 +44,7 @@ describe("RecipeRegisterForm", () => {
     vi.mocked(createRecipe).mockResolvedValue(recipe);
     render(<RecipeRegisterForm />);
 
-    await user.type(screen.getByLabelText("URL"), "https://example.com");
+    await user.type(screen.getByLabelText("URL（任意）"), "https://example.com");
     await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
     await user.type(screen.getByLabelText("メモ（任意）"), "美味しい");
 
@@ -77,7 +77,7 @@ describe("RecipeRegisterForm", () => {
     vi.mocked(createRecipe).mockResolvedValue(recipe);
     render(<RecipeRegisterForm />);
 
-    await user.type(screen.getByLabelText("URL"), "https://example.com");
+    await user.type(screen.getByLabelText("URL（任意）"), "https://example.com");
     await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
     const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
     await user.upload(screen.getByLabelText("サムネイル画像（任意）"), file);
@@ -101,7 +101,7 @@ describe("RecipeRegisterForm", () => {
     );
     render(<RecipeRegisterForm />);
 
-    await user.type(screen.getByLabelText("URL"), "https://example.com");
+    await user.type(screen.getByLabelText("URL（任意）"), "https://example.com");
     await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
     const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
     await user.upload(screen.getByLabelText("サムネイル画像（任意）"), file);
@@ -122,7 +122,7 @@ describe("RecipeRegisterForm", () => {
     );
     render(<RecipeRegisterForm />);
 
-    await user.type(screen.getByLabelText("URL"), "https://example.com");
+    await user.type(screen.getByLabelText("URL（任意）"), "https://example.com");
     await user.type(screen.getByLabelText("タイトル"), "a");
     await user.click(screen.getByRole("button", { name: "登録する" }));
 
@@ -130,6 +130,20 @@ describe("RecipeRegisterForm", () => {
       "titleは必須です",
     );
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("URLを入力しなくても登録できる", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createRecipe).mockResolvedValue({ ...recipe, url: null });
+    render(<RecipeRegisterForm />);
+
+    await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
+    await user.click(screen.getByRole("button", { name: "登録する" }));
+
+    expect(createRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ url: undefined }),
+    );
+    expect(pushMock).toHaveBeenCalledWith("/");
   });
 
   it("キャンセルボタンでトップに遷移する", async () => {

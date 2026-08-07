@@ -84,14 +84,16 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
         登録日 {formatDate(recipe.createdAt)} ／ 更新日 {formatDate(recipe.updatedAt)}
       </p>
 
-      <a
-        href={recipe.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={styles.sourceLink}
-      >
-        元サイトを開く ↗
-      </a>
+      {recipe.url && (
+        <a
+          href={recipe.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.sourceLink}
+        >
+          元サイトを開く ↗
+        </a>
+      )}
 
       {recipe.memo && (
         <div className={styles.memoSection}>

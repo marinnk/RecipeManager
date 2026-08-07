@@ -54,7 +54,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
   } = useDeleteRecipe();
 
   const [title, setTitle] = useState(recipe.title);
-  const [url, setUrl] = useState(recipe.url);
+  const [url, setUrl] = useState(recipe.url ?? "");
   // 既存のサムネイルURLはユーザーが直接編集する項目ではなく、新しい画像が
   // 選択された場合のみ送信時に上書きされるので、setterを持たない定数として扱う。
   const thumbnailUrl = recipe.thumbnailUrl ?? undefined;
@@ -103,7 +103,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
 
     const updated = await submit(recipeId, {
       title,
-      url,
+      url: url.trim() || undefined,
       thumbnailUrl: nextThumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
@@ -128,13 +128,12 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
-        <label htmlFor="url">URL</label>
+        <label htmlFor="url">URL（任意）</label>
         <input
           id="url"
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          required
         />
       </div>
 

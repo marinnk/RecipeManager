@@ -46,7 +46,7 @@ describe("RecipeEditForm", () => {
     const { container } = render(<RecipeEditForm recipeId={1} />);
 
     expect(await screen.findByLabelText("タイトル")).toHaveValue("肉じゃが");
-    expect(screen.getByLabelText("URL")).toHaveValue("https://example.com");
+    expect(screen.getByLabelText("URL（任意）")).toHaveValue("https://example.com");
     expect(screen.getByLabelText("メモ（任意）")).toHaveValue("美味しい");
     expect(screen.getByText("#和食")).toBeInTheDocument();
     expect(screen.getByText("#簡単")).toBeInTheDocument();
@@ -77,6 +77,23 @@ describe("RecipeEditForm", () => {
       memo: "美味しい",
       tags: ["和食", "簡単"],
     });
+    expect(backMock).toHaveBeenCalled();
+  });
+
+  it("URLを空にして送信すると、URL無しで更新APIを呼び出す", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(updateRecipe).mockResolvedValue({ ...recipe, url: null });
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.clear(screen.getByLabelText("URL（任意）"));
+    await user.click(screen.getByRole("button", { name: "更新する" }));
+
+    expect(updateRecipe).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ url: undefined }),
+    );
     expect(backMock).toHaveBeenCalled();
   });
 

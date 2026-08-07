@@ -20,8 +20,7 @@ import java.time.Instant
 class Recipe(
     @Column(nullable = false)
     var title: String,
-    @Column(nullable = false)
-    var url: String,
+    var url: String? = null,
     @Column(name = "thumbnail_url")
     var thumbnailUrl: String? = null,
     @Column(columnDefinition = "TEXT")
