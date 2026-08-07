@@ -76,9 +76,6 @@ export function RecipeList() {
                 ))}
               </div>
               <div className={styles.cardActions}>
-                <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
-                  編集
-                </Link>
                 <button
                   type="button"
                   className={styles.deleteButton}
@@ -87,6 +84,9 @@ export function RecipeList() {
                 >
                   削除
                 </button>
+                <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
+                  編集
+                </Link>
               </div>
             </div>
           </li>
