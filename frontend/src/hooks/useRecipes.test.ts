@@ -74,4 +74,46 @@ describe("useRecipes", () => {
 
     await waitFor(() => expect(getRecipes).toHaveBeenCalledTimes(2));
   });
+
+  it("keyword/tagsを指定するとgetRecipesにそのまま渡す", async () => {
+    vi.mocked(getRecipes).mockReset();
+    vi.mocked(getRecipes).mockResolvedValue([]);
+
+    renderHook(() => useRecipes({ keyword: "肉じゃが", tags: ["和食"] }));
+
+    await waitFor(() =>
+      expect(getRecipes).toHaveBeenCalledWith({ keyword: "肉じゃが", tags: ["和食"] }),
+    );
+  });
+
+  it("keywordが変わると再取得する", async () => {
+    vi.mocked(getRecipes).mockReset();
+    vi.mocked(getRecipes).mockResolvedValue([]);
+
+    const { rerender } = renderHook(
+      ({ keyword }: { keyword: string }) => useRecipes({ keyword }),
+      { initialProps: { keyword: "肉じゃが" } },
+    );
+    await waitFor(() => expect(getRecipes).toHaveBeenCalledTimes(1));
+
+    rerender({ keyword: "カレー" });
+
+    await waitFor(() => expect(getRecipes).toHaveBeenCalledTimes(2));
+  });
+
+  it("tagsの中身が同じなら配列の参照が変わっても再取得しない", async () => {
+    vi.mocked(getRecipes).mockReset();
+    vi.mocked(getRecipes).mockResolvedValue([]);
+
+    const { rerender } = renderHook(
+      ({ tags }: { tags: string[] }) => useRecipes({ tags }),
+      { initialProps: { tags: ["和食"] } },
+    );
+    await waitFor(() => expect(getRecipes).toHaveBeenCalledTimes(1));
+
+    rerender({ tags: ["和食"] }); // 中身は同じだが新しい配列インスタンス
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(getRecipes).toHaveBeenCalledTimes(1);
+  });
 });

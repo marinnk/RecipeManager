@@ -42,6 +42,44 @@ describe("getRecipes", () => {
       body: { error: "INTERNAL_ERROR", message: "取得に失敗しました" },
     } satisfies Partial<ApiError>);
   });
+
+  it("keywordを指定するとクエリパラメータに付与する", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await getRecipes({ keyword: "肉じゃが" });
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/recipes?keyword=${encodeURIComponent("肉じゃが")}`,
+    );
+  });
+
+  it("tagsを指定すると同名パラメータを繰り返して付与する", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await getRecipes({ tags: ["和食", "時短"] });
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/recipes?tags=${encodeURIComponent("和食")}&tags=${encodeURIComponent("時短")}`,
+    );
+  });
+
+  it("keywordとtagsを両方指定すると両方のパラメータを付与する", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await getRecipes({ keyword: "肉じゃが", tags: ["和食"] });
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/recipes?keyword=${encodeURIComponent("肉じゃが")}&tags=${encodeURIComponent("和食")}`,
+    );
+  });
+
+  it("パラメータを指定しない場合は従来通りクエリ無しで呼び出す", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+
+    await getRecipes();
+
+    expect(fetch).toHaveBeenCalledWith("/api/recipes");
+  });
 });
 
 describe("createRecipe", () => {

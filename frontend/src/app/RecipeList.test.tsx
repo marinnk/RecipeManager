@@ -1,12 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDeleteRecipe } from "@/hooks/useDeleteRecipe";
 import { useRecipes } from "@/hooks/useRecipes";
+import { useTags } from "@/hooks/useTags";
 import { RecipeList } from "./RecipeList";
 
 vi.mock("@/hooks/useRecipes");
 vi.mock("@/hooks/useDeleteRecipe");
+vi.mock("@/hooks/useTags");
 
 const refetchMock = vi.fn();
 const deleteSubmitMock = vi.fn();
@@ -31,6 +33,11 @@ describe("RecipeList", () => {
       isSubmitting: false,
       error: null,
     });
+    vi.mocked(useTags).mockReturnValue({ tags: [], isLoading: false, error: null });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("読み込み中はローディング表示をする", () => {
@@ -158,5 +165,108 @@ describe("RecipeList", () => {
       ),
     ).toBeInTheDocument();
     expect(refetchMock).not.toHaveBeenCalled();
+  });
+
+  it("絞り込み条件が無く0件の場合と異なり、絞り込み中に0件だと専用メッセージを表示する", () => {
+    vi.mocked(useTags).mockReturnValue({
+      tags: ["和食"],
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(useRecipes).mockReturnValue({
+      recipes: [],
+      isLoading: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    render(<RecipeList />);
+    fireEvent.click(screen.getByRole("button", { name: "#和食" }));
+
+    expect(
+      screen.getByText("条件に一致するレシピが見つかりません。"),
+    ).toBeInTheDocument();
+  });
+
+  it("useTagsで取得したタグをフィルターの選択肢として表示する", () => {
+    vi.mocked(useTags).mockReturnValue({
+      tags: ["和食", "時短"],
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(useRecipes).mockReturnValue({
+      recipes: [],
+      isLoading: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    render(<RecipeList />);
+
+    expect(screen.getByRole("button", { name: "#和食" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "#時短" })).toBeInTheDocument();
+  });
+
+  it("タグを選択するとuseRecipesにtagsとして渡す", () => {
+    vi.mocked(useTags).mockReturnValue({
+      tags: ["和食"],
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(useRecipes).mockReturnValue({
+      recipes: [],
+      isLoading: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    render(<RecipeList />);
+    fireEvent.click(screen.getByRole("button", { name: "#和食" }));
+
+    expect(useRecipes).toHaveBeenLastCalledWith({ keyword: "", tags: ["和食"] });
+  });
+
+  it("条件をクリアするとキーワード・タグとも空でuseRecipesを呼ぶ", () => {
+    vi.mocked(useTags).mockReturnValue({
+      tags: ["和食"],
+      isLoading: false,
+      error: null,
+    });
+    vi.mocked(useRecipes).mockReturnValue({
+      recipes: [],
+      isLoading: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    render(<RecipeList />);
+    fireEvent.click(screen.getByRole("button", { name: "#和食" }));
+    fireEvent.click(screen.getByRole("button", { name: "条件をクリア" }));
+
+    expect(useRecipes).toHaveBeenLastCalledWith({ keyword: "", tags: [] });
+  });
+
+  it("キーワード入力は300ms経ってからuseRecipesに反映される", () => {
+    vi.useFakeTimers();
+    vi.mocked(useRecipes).mockReturnValue({
+      recipes: [],
+      isLoading: false,
+      error: null,
+      refetch: refetchMock,
+    });
+
+    render(<RecipeList />);
+    fireEvent.change(screen.getByLabelText("タイトルで検索"), {
+      target: { value: "肉じゃが" },
+    });
+
+    // 300ms経つ前はまだ反映されない
+    expect(useRecipes).toHaveBeenLastCalledWith({ keyword: "", tags: [] });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(useRecipes).toHaveBeenLastCalledWith({ keyword: "肉じゃが", tags: [] });
   });
 });

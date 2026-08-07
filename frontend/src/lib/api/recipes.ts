@@ -9,8 +9,24 @@ export class ApiError extends Error {
   }
 }
 
-export async function getRecipes(): Promise<Recipe[]> {
-  const res = await fetch("/api/recipes");
+export type GetRecipesParams = {
+  keyword?: string;
+  tags?: string[];
+};
+
+export async function getRecipes(params?: GetRecipesParams): Promise<Recipe[]> {
+  const query = new URLSearchParams();
+  if (params?.keyword) {
+    query.set("keyword", params.keyword);
+  }
+  // tagsは同名パラメータを繰り返す形式(?tags=a&tags=b)で送る。
+  // バックエンドの@RequestParam tags: List<String>がこの形式をそのまま受け取れる。
+  for (const tag of params?.tags ?? []) {
+    query.append("tags", tag);
+  }
+  const queryString = query.toString();
+
+  const res = await fetch(`/api/recipes${queryString ? `?${queryString}` : ""}`);
 
   if (!res.ok) {
     const body: ApiErrorBody = await res.json();
