@@ -86,6 +86,18 @@ export function RecipeRegisterForm() {
     runFetchMetadata(trimmed);
   };
 
+  // タグ入力と同じく、Enterキーでも即座に取得できるようにする（IME変換確定の
+  // Enterでは発火しないようisComposingを見る）。ボタンと同じ「明示的な操作」
+  // として扱うので、URLが変わっていなくても必ず取得する。
+  const handleUrlKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      if (url.trim()) {
+        handleFetchMetadataClick();
+      }
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -122,6 +134,7 @@ export function RecipeRegisterForm() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onBlur={handleUrlBlur}
+            onKeyDown={handleUrlKeyDown}
           />
           <button
             type="button"
@@ -131,6 +144,7 @@ export function RecipeRegisterForm() {
             {isFetching ? "取得中…" : "自動取得"}
           </button>
         </div>
+        <p className={styles.urlHint}>Enterキーでも取得できます</p>
       </div>
 
       <div className={styles.field}>

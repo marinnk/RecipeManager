@@ -58,7 +58,8 @@
   flex: 1;
 }
 
-.tagHint {
+.tagHint,
+.urlHint {
   margin: 0;
   color: #666;
   font-size: 0.8125rem;

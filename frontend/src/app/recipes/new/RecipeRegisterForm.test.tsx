@@ -200,6 +200,28 @@ describe("RecipeRegisterForm", () => {
     );
   });
 
+  it("URL欄でEnterキーを押すと取得し、フォームは送信されない", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue(
+      "肉じゃがの作り方",
+    );
+    expect(createRecipe).not.toHaveBeenCalled();
+  });
+
   it("URLを変更せずにフォーカスが外れても再取得しない", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchMetadata).mockResolvedValue({
