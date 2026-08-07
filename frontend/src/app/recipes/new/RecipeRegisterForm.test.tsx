@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, createRecipe } from "@/lib/api/recipes";
 import { uploadImage } from "@/lib/api/images";
+import { fetchMetadata } from "@/lib/api/metadata";
 import { RecipeRegisterForm } from "./RecipeRegisterForm";
 
 vi.mock("@/lib/api/recipes", async () => {
@@ -14,6 +15,10 @@ vi.mock("@/lib/api/recipes", async () => {
 
 vi.mock("@/lib/api/images", () => ({
   uploadImage: vi.fn(),
+}));
+
+vi.mock("@/lib/api/metadata", () => ({
+  fetchMetadata: vi.fn(),
 }));
 
 const pushMock = vi.fn();
@@ -37,6 +42,7 @@ describe("RecipeRegisterForm", () => {
     pushMock.mockClear();
     vi.mocked(createRecipe).mockReset();
     vi.mocked(uploadImage).mockReset();
+    vi.mocked(fetchMetadata).mockReset();
   });
 
   it("タグを追加・削除でき、送信すると入力内容でAPIを呼び出しトップに遷移する", async () => {
@@ -144,6 +150,224 @@ describe("RecipeRegisterForm", () => {
       expect.objectContaining({ url: undefined }),
     );
     expect(pushMock).toHaveBeenCalledWith("/");
+  });
+
+  it("自動取得ボタン押下でタイトル・サムネイルプレビューが反映される", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue(
+      "肉じゃがの作り方",
+    );
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    );
+  });
+
+  it("URL欄からフォーカスが外れると自動で取得する", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.tab();
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue(
+      "肉じゃがの作り方",
+    );
+  });
+
+  it("URL欄でEnterキーを押すと取得し、フォームは送信されない", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue(
+      "肉じゃがの作り方",
+    );
+    expect(createRecipe).not.toHaveBeenCalled();
+  });
+
+  it("URL未入力の場合、削除ボタンは無効化されている", () => {
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "URLを削除" })).toBeDisabled();
+  });
+
+  it("タイトル削除ボタンでタイトルだけ空にできる", async () => {
+    const user = userEvent.setup();
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "タイトルを削除" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
+    await user.type(screen.getByLabelText("メモ（任意）"), "美味しい");
+
+    await user.click(screen.getByRole("button", { name: "タイトルを削除" }));
+
+    expect(screen.getByLabelText("タイトル")).toHaveValue("");
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("美味しい");
+  });
+
+  it("メモ削除ボタンでメモだけ空にできる", async () => {
+    const user = userEvent.setup();
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "メモを削除" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
+    await user.type(screen.getByLabelText("メモ（任意）"), "美味しい");
+
+    await user.click(screen.getByRole("button", { name: "メモを削除" }));
+
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("");
+    expect(screen.getByLabelText("タイトル")).toHaveValue("肉じゃが");
+  });
+
+  it("削除ボタン押下でURL欄とサムネイルプレビューが消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+    await screen.findByDisplayValue("肉じゃがの作り方");
+    expect(container.querySelector("img")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "URLを削除" }));
+
+    expect(screen.getByLabelText("URL（任意）")).toHaveValue("");
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
+  it("自動取得後にURL欄を空にすると、サムネイルプレビューも消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+    await screen.findByDisplayValue("肉じゃがの作り方");
+    expect(container.querySelector("img")).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("URL（任意）"));
+
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
+  it("URLを変更せずにフォーカスが外れても再取得しない", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: null,
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.tab();
+    await screen.findByDisplayValue("肉じゃがの作り方");
+
+    await user.clear(screen.getByLabelText("タイトル"));
+    await user.type(screen.getByLabelText("タイトル"), "自分でつけたタイトル");
+
+    // URL欄をクリックして、変更せずにまたフォーカスを外す。
+    await user.click(screen.getByLabelText("URL（任意）"));
+    await user.tab();
+
+    expect(fetchMetadata).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("タイトル")).toHaveValue("自分でつけたタイトル");
+  });
+
+  it("自動取得に失敗した場合はエラーメッセージを表示する", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockRejectedValue(
+      new ApiError(422, {
+        error: "METADATA_FETCH_FAILED",
+        message: "情報を取得できませんでした。手動で入力してください",
+      }),
+    );
+    render(<RecipeRegisterForm />);
+
+    await user.type(screen.getByLabelText("URL（任意）"), "https://example.com/unknown");
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "情報を取得できませんでした。手動で入力してください",
+    );
+  });
+
+  it("自動取得後に画像ファイルを選択すると、そちらのURLで登録される", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    vi.mocked(uploadImage).mockResolvedValue({ url: "/api/uploads/manual.jpg" });
+    vi.mocked(createRecipe).mockResolvedValue(recipe);
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+    await screen.findByDisplayValue("肉じゃがの作り方");
+
+    const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("サムネイル画像（任意）"), file);
+    await user.click(screen.getByRole("button", { name: "登録する" }));
+
+    expect(uploadImage).toHaveBeenCalledWith(file);
+    expect(createRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ thumbnailUrl: "/api/uploads/manual.jpg" }),
+    );
   });
 
   it("キャンセルボタンでトップに遷移する", async () => {

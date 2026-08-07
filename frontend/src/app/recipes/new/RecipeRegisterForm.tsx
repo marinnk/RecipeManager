@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useCreateRecipe } from "@/hooks/useCreateRecipe";
+import { useFetchMetadata } from "@/hooks/useFetchMetadata";
 import { useUploadImage } from "@/hooks/useUploadImage";
 import styles from "./RecipeRegisterForm.module.css";
 
@@ -14,13 +15,25 @@ export function RecipeRegisterForm() {
     isUploading,
     error: uploadError,
   } = useUploadImage();
+  const {
+    submit: fetchMetadata,
+    isFetching,
+    error: fetchError,
+  } = useFetchMetadata();
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  // URL自動取得で埋まったサムネイル。ユーザーが画像ファイルを選択した場合は
+  // そちらが優先される（送信時の分岐は下のhandleSubmit参照）。
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>(undefined);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
+  // URL欄からフォーカスが外れるたびに毎回自動取得すると、取得後にタイトルを
+  // 手で直しても同じURLのままクリックし直しただけで上書きされてしまう。
+  // 直前に取得したURLを覚えておき、変わっていなければ再取得しないようにする。
+  const lastFetchedUrlRef = useRef<string | null>(null);
 
   const addTag = () => {
     const trimmed = tagDraft.trim();
@@ -47,23 +60,79 @@ export function RecipeRegisterForm() {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
+  // URLとサムネイルをまとめて消す。自動取得したサムネイルは元サイトへの直リンクの
+  // ままなので、URLだけ消してサムネイルが残ると中途半端で二度手間になる
+  // （手動でアップロードしたファイルは別状態(thumbnailFile)で管理しているので影響しない）。
+  const clearUrl = () => {
+    setUrl("");
+    setThumbnailUrl(undefined);
+    lastFetchedUrlRef.current = null;
+  };
+
+  const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrl(value);
+    if (!value.trim() && thumbnailUrl) {
+      setThumbnailUrl(undefined);
+      lastFetchedUrlRef.current = null;
+    }
+  };
+
+  const runFetchMetadata = async (targetUrl: string) => {
+    lastFetchedUrlRef.current = targetUrl;
+    const result = await fetchMetadata(targetUrl);
+    if (result) {
+      setTitle(result.title);
+      setThumbnailUrl(result.thumbnailUrl ?? undefined);
+      // 前に選んでいたファイルが残っていると、自動取得したサムネイルより
+      // 優先されてプレビュー・送信に使われてしまうため、ここで解除しておく。
+      setThumbnailFile(null);
+    }
+  };
+
+  // ボタンを押したときは、直前と同じURLでも明示的なやり直しとして必ず取得する。
+  const handleFetchMetadataClick = () => {
+    runFetchMetadata(url.trim());
+  };
+
+  // URL欄からフォーカスが外れたときは、URLが変わっている場合だけ自動で取得する。
+  const handleUrlBlur = () => {
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === lastFetchedUrlRef.current) {
+      return;
+    }
+    runFetchMetadata(trimmed);
+  };
+
+  // タグ入力と同じく、Enterキーでも即座に取得できるようにする（IME変換確定の
+  // Enterでは発火しないようisComposingを見る）。ボタンと同じ「明示的な操作」
+  // として扱うので、URLが変わっていなくても必ず取得する。
+  const handleUrlKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      if (url.trim()) {
+        handleFetchMetadataClick();
+      }
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let thumbnailUrl: string | undefined;
+    let nextThumbnailUrl = thumbnailUrl;
     if (thumbnailFile) {
       const uploaded = await uploadThumbnail(thumbnailFile);
       if (!uploaded) {
         // アップロード失敗時はここで中断する。エラーはuseUploadImageが保持している。
         return;
       }
-      thumbnailUrl = uploaded.url;
+      nextThumbnailUrl = uploaded.url;
     }
 
     const recipe = await submit({
       title,
       url: url.trim() || undefined,
-      thumbnailUrl,
+      thumbnailUrl: nextThumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
     });
@@ -76,27 +145,61 @@ export function RecipeRegisterForm() {
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
         <label htmlFor="url">URL（任意）</label>
-        <input
-          id="url"
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+        <div className={styles.urlRow}>
+          <input
+            id="url"
+            type="url"
+            value={url}
+            onChange={handleUrlChange}
+            onBlur={handleUrlBlur}
+            onKeyDown={handleUrlKeyDown}
+          />
+          <button
+            type="button"
+            onClick={handleFetchMetadataClick}
+            disabled={!url.trim() || isFetching}
+          >
+            {isFetching ? "取得中…" : "自動取得"}
+          </button>
+          <button
+            type="button"
+            aria-label="URLを削除"
+            onClick={clearUrl}
+            disabled={!url.trim()}
+          >
+            ×
+          </button>
+        </div>
+        <p className={styles.urlHint}>Enterキーでも取得できます</p>
       </div>
 
       <div className={styles.field}>
         <label htmlFor="title">タイトル</label>
-        <input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
+        <div className={styles.titleRow}>
+          <input
+            id="title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            aria-label="タイトルを削除"
+            onClick={() => setTitle("")}
+            disabled={!title.trim()}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
         <label htmlFor="thumbnailFile">サムネイル画像（任意）</label>
+        {!thumbnailFile && thumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumbnailUrl} alt="" className={styles.thumbnailPreview} />
+        )}
         <input
           id="thumbnailFile"
           type="file"
@@ -110,11 +213,21 @@ export function RecipeRegisterForm() {
 
       <div className={styles.field}>
         <label htmlFor="memo">メモ（任意）</label>
-        <textarea
-          id="memo"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-        />
+        <div className={styles.memoRow}>
+          <textarea
+            id="memo"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
+          <button
+            type="button"
+            aria-label="メモを削除"
+            onClick={() => setMemo("")}
+            disabled={!memo.trim()}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
@@ -148,9 +261,9 @@ export function RecipeRegisterForm() {
         <p className={styles.tagHint}>Enterキーでも追加できます</p>
       </div>
 
-      {(uploadError || error) && (
+      {(uploadError || error || fetchError) && (
         <p role="alert" className={styles.error}>
-          {uploadError || error}
+          {uploadError || error || fetchError}
         </p>
       )}
 
