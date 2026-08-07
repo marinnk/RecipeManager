@@ -86,14 +86,26 @@
   margin-top: auto;
 }
 
+/*
+ * 文字だけのリンク/ボタンだと、少し的を外すと下の.cardLinkのオーバーレイ
+ * （カード全体のクリック領域）にクリックが抜けてしまい、押した感触が
+ * 不安定になる。padding+borderで実際のボタンとしての当たり判定を
+ * 十分な大きさにし、見た目上も編集・削除だとはっきり分かるようにしている。
+ */
 .editLink {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: inherit;
   font-size: 0.875rem;
+  text-decoration: none;
 }
 
 .deleteButton {
-  border: none;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
   background: none;
-  padding: 0;
   color: #c0392b;
   font-size: 0.875rem;
   cursor: pointer;
