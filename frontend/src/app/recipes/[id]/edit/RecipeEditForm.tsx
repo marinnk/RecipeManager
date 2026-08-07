@@ -99,14 +99,19 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
+  // URLとサムネイルをまとめて消す。自動取得したサムネイルは元サイトへの直リンクの
+  // ままなので、URLだけ消してサムネイルが残ると中途半端で二度手間になる
+  // （手動でアップロードしたファイルは別状態(thumbnailFile)で管理しているので影響しない）。
+  const clearUrl = () => {
+    setUrl("");
+    setThumbnailUrl(undefined);
+    lastFetchedUrlRef.current = null;
+  };
+
   const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUrl(value);
     if (!value.trim() && thumbnailUrl) {
-      // 自動取得したサムネイルは元サイトへの直リンクのままなので、URLだけ消して
-      // サムネイルが残ると中途半端で二度手間になる。URLを消したら一緒に消す
-      // （手動でアップロードしたファイルは別状態(thumbnailFile)で管理しているので
-      // 影響しない）。
       setThumbnailUrl(undefined);
       lastFetchedUrlRef.current = null;
     }
@@ -206,6 +211,14 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             disabled={!url.trim() || isFetching}
           >
             {isFetching ? "取得中…" : "自動取得"}
+          </button>
+          <button
+            type="button"
+            aria-label="URLを削除"
+            onClick={clearUrl}
+            disabled={!url.trim()}
+          >
+            ×
           </button>
         </div>
         <p className={styles.urlHint}>Enterキーでも取得できます</p>

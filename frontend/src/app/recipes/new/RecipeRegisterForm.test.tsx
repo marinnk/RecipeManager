@@ -222,6 +222,33 @@ describe("RecipeRegisterForm", () => {
     expect(createRecipe).not.toHaveBeenCalled();
   });
 
+  it("URL未入力の場合、削除ボタンは無効化されている", () => {
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "URLを削除" })).toBeDisabled();
+  });
+
+  it("削除ボタン押下でURL欄とサムネイルプレビューが消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+    await screen.findByDisplayValue("肉じゃがの作り方");
+    expect(container.querySelector("img")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "URLを削除" }));
+
+    expect(screen.getByLabelText("URL（任意）")).toHaveValue("");
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
   it("自動取得後にURL欄を空にすると、サムネイルプレビューも消える", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchMetadata).mockResolvedValue({

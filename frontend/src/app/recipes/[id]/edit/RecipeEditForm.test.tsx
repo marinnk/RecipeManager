@@ -254,6 +254,20 @@ describe("RecipeEditForm", () => {
     expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
+  it("削除ボタン押下でURL欄とサムネイルプレビューが消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    const { container } = render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    expect(container.querySelector("img")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "URLを削除" }));
+
+    expect(screen.getByLabelText("URL（任意）")).toHaveValue("");
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
   it("既存URLを変更せずにフォーカスが外れても自動取得しない", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);
