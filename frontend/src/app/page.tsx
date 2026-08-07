@@ -6,8 +6,11 @@ export default function Home() {
   return (
     <main>
       <div className={styles.header}>
-        <h1>RecipeManager</h1>
-        <Link href="/recipes/new" className={styles.registerLink}>
+        <div>
+          <span className="eyebrow">マイレシピ</span>
+          <h1>RecipeManager</h1>
+        </div>
+        <Link href="/recipes/new" className="btn btn-primary">
           + 新規登録
         </Link>
       </div>

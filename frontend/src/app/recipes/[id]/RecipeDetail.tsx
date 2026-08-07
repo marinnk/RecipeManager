@@ -23,12 +23,12 @@ export function RecipeDetail({ recipeId }: Props) {
   const { recipe, isLoading, error: loadError } = useRecipe(recipeId);
 
   if (isLoading) {
-    return <p>読み込み中…</p>;
+    return <p className="hint-text">読み込み中…</p>;
   }
 
   if (loadError || !recipe) {
     return (
-      <p role="alert" className={styles.error}>
+      <p role="alert" className="error-text">
         {loadError}
       </p>
     );
@@ -73,14 +73,14 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       {recipe.tags.length > 0 && (
         <div className={styles.tagList}>
           {recipe.tags.map((tag) => (
-            <span key={tag} className={styles.tagChip}>
+            <span key={tag} className="tag">
               #{tag}
             </span>
           ))}
         </div>
       )}
 
-      <p className={styles.meta}>
+      <p className={`${styles.meta} hint-text`}>
         登録日 {formatDate(recipe.createdAt)} ／ 更新日 {formatDate(recipe.updatedAt)}
       </p>
 
@@ -103,7 +103,7 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       )}
 
       {deleteError && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className="error-text">
           {deleteError}
         </p>
       )}
@@ -111,13 +111,13 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       <div className={styles.actions}>
         <button
           type="button"
-          className={styles.deleteButton}
+          className={`${styles.deleteButton} btn btn-danger`}
           disabled={isDeleting}
           onClick={handleDelete}
         >
           {isDeleting ? "削除中…" : "削除する"}
         </button>
-        <Link href={`/recipes/${recipe.id}/edit`} className={styles.secondaryButton}>
+        <Link href={`/recipes/${recipe.id}/edit`} className="btn btn-ghost">
           編集する
         </Link>
       </div>

@@ -48,11 +48,7 @@ export function RecipeFilterBar({
                 key={tag}
                 type="button"
                 aria-pressed={selected}
-                className={
-                  selected
-                    ? `${styles.tagChip} ${styles.tagChipSelected}`
-                    : styles.tagChip
-                }
+                className={selected ? "chip-filter is-on" : "chip-filter"}
                 onClick={() => onToggleTag(tag)}
               >
                 #{tag}
@@ -62,7 +58,7 @@ export function RecipeFilterBar({
         </div>
       )}
       {hasFilter && (
-        <button type="button" className={styles.clearButton} onClick={onClear}>
+        <button type="button" className="btn btn-ghost" onClick={onClear}>
           条件をクリア
         </button>
       )}

@@ -157,6 +157,7 @@ export function RecipeRegisterForm() {
           />
           <button
             type="button"
+            className="btn btn-ghost"
             onClick={handleFetchMetadataClick}
             disabled={!url.trim() || isFetching}
           >
@@ -164,6 +165,7 @@ export function RecipeRegisterForm() {
           </button>
           <button
             type="button"
+            className="btn-icon"
             aria-label="URLを削除"
             onClick={clearUrl}
             disabled={!url.trim()}
@@ -171,7 +173,7 @@ export function RecipeRegisterForm() {
             ×
           </button>
         </div>
-        <p className={styles.urlHint}>Enterキーでも取得できます</p>
+        <p className={`${styles.urlHint} hint-text`}>Enterキーでも取得できます</p>
       </div>
 
       <div className={styles.field}>
@@ -187,6 +189,7 @@ export function RecipeRegisterForm() {
           />
           <button
             type="button"
+            className="btn-icon"
             aria-label="タイトルを削除"
             onClick={() => setTitle("")}
             disabled={!title.trim()}
@@ -209,7 +212,7 @@ export function RecipeRegisterForm() {
           onChange={handleThumbnailFileChange}
         />
         {isUploading && (
-          <p className={styles.uploadStatus}>アップロード中…</p>
+          <p className="hint-text">アップロード中…</p>
         )}
       </div>
 
@@ -224,6 +227,7 @@ export function RecipeRegisterForm() {
           />
           <button
             type="button"
+            className="btn-icon"
             aria-label="メモを削除"
             onClick={() => setMemo("")}
             disabled={!memo.trim()}
@@ -237,7 +241,7 @@ export function RecipeRegisterForm() {
         <label htmlFor="tagDraft">タグ</label>
         <div className={styles.tagList}>
           {tags.map((tag) => (
-            <span key={tag} className={styles.tagChip}>
+            <span key={tag} className="tag">
               #{tag}
               <button
                 type="button"
@@ -258,24 +262,24 @@ export function RecipeRegisterForm() {
             onKeyDown={handleTagKeyDown}
             maxLength={30}
           />
-          <button type="button" onClick={addTag}>
+          <button type="button" className="btn btn-ghost" onClick={addTag}>
             + 追加
           </button>
         </div>
-        <p className={styles.tagHint}>Enterキーでも追加できます</p>
+        <p className={`${styles.tagHint} hint-text`}>Enterキーでも追加できます</p>
       </div>
 
       {(uploadError || error || fetchError) && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className="error-text">
           {uploadError || error || fetchError}
         </p>
       )}
 
       <div className={styles.actions}>
-        <button type="button" onClick={() => router.push("/")}>
+        <button type="button" className="btn btn-ghost" onClick={() => router.push("/")}>
           キャンセル
         </button>
-        <button type="submit" disabled={isSubmitting || isUploading}>
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting || isUploading}>
           {isSubmitting || isUploading ? "登録中…" : "登録する"}
         </button>
       </div>
