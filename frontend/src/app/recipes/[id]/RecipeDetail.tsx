@@ -57,7 +57,7 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
 
   return (
     <div className={styles.wrapper}>
-      <Link href="/" className={styles.backLink}>
+      <Link href="/" className={`${styles.backLink} btn btn-ghost`}>
         ← 一覧に戻る
       </Link>
 

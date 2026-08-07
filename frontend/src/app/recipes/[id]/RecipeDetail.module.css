@@ -5,13 +5,7 @@
 }
 
 .backLink {
-  font-size: 0.82rem;
-  color: var(--ink-soft);
   align-self: flex-start;
-}
-
-.backLink:hover {
-  color: var(--ink);
 }
 
 .thumbnail {
