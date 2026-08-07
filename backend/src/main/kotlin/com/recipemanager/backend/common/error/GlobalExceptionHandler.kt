@@ -1,6 +1,7 @@
 package com.recipemanager.backend.common.error
 
 import com.recipemanager.backend.image.InvalidImageFileException
+import com.recipemanager.backend.metadata.MetadataFetchException
 import com.recipemanager.backend.recipe.RecipeNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -39,4 +40,10 @@ class GlobalExceptionHandler {
         ResponseEntity
             .status(HttpStatus.NOT_FOUND)
             .body(ErrorResponse(error = "NOT_FOUND", message = ex.message ?: "レシピが見つかりません"))
+
+    @ExceptionHandler(MetadataFetchException::class)
+    fun handleMetadataFetchFailed(ex: MetadataFetchException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(ErrorResponse(error = "METADATA_FETCH_FAILED", message = ex.message ?: "情報を取得できませんでした"))
 }

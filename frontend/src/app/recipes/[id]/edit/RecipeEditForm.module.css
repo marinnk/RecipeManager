@@ -49,6 +49,15 @@
   flex: 1;
 }
 
+.urlRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.urlRow input {
+  flex: 1;
+}
+
 .tagHint {
   margin: 0;
   color: #666;

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, deleteRecipe, getRecipe, updateRecipe } from "@/lib/api/recipes";
 import { uploadImage } from "@/lib/api/images";
+import { fetchMetadata } from "@/lib/api/metadata";
 import { RecipeEditForm } from "./RecipeEditForm";
 
 vi.mock("@/lib/api/recipes", async () => {
@@ -14,6 +15,10 @@ vi.mock("@/lib/api/recipes", async () => {
 
 vi.mock("@/lib/api/images", () => ({
   uploadImage: vi.fn(),
+}));
+
+vi.mock("@/lib/api/metadata", () => ({
+  fetchMetadata: vi.fn(),
 }));
 
 const backMock = vi.fn();
@@ -39,6 +44,7 @@ describe("RecipeEditForm", () => {
     vi.mocked(updateRecipe).mockReset();
     vi.mocked(uploadImage).mockReset();
     vi.mocked(deleteRecipe).mockReset();
+    vi.mocked(fetchMetadata).mockReset();
   });
 
   it("既存のレシピ情報がフォームに初期表示される", async () => {
@@ -157,6 +163,78 @@ describe("RecipeEditForm", () => {
       "titleは必須です",
     );
     expect(backMock).not.toHaveBeenCalled();
+  });
+
+  it("自動取得ボタン押下でタイトル・サムネイルプレビューが反映される", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "唐揚げの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/yyyy/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.clear(screen.getByLabelText("URL（任意）"));
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=yyyy",
+    );
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=yyyy",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue("唐揚げの作り方");
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://i.ytimg.com/vi/yyyy/hqdefault.jpg",
+    );
+  });
+
+  it("自動取得に失敗した場合はエラーメッセージを表示する", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(fetchMetadata).mockRejectedValue(
+      new ApiError(422, {
+        error: "METADATA_FETCH_FAILED",
+        message: "情報を取得できませんでした。手動で入力してください",
+      }),
+    );
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "情報を取得できませんでした。手動で入力してください",
+    );
+  });
+
+  it("自動取得後に画像ファイルを選択すると、そちらのURLで更新される", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "唐揚げの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/yyyy/hqdefault.jpg",
+    });
+    vi.mocked(uploadImage).mockResolvedValue({ url: "/api/uploads/manual.jpg" });
+    vi.mocked(updateRecipe).mockResolvedValue(recipe);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "自動取得" }));
+    await screen.findByDisplayValue("唐揚げの作り方");
+
+    const file = new File(["dummy"], "photo.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("サムネイル画像（任意）"), file);
+    await user.click(screen.getByRole("button", { name: "更新する" }));
+
+    expect(uploadImage).toHaveBeenCalledWith(file);
+    expect(updateRecipe).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ thumbnailUrl: "/api/uploads/manual.jpg" }),
+    );
   });
 
   it("キャンセルボタンで前の画面に戻る", async () => {

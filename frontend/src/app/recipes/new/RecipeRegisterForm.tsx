@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useCreateRecipe } from "@/hooks/useCreateRecipe";
+import { useFetchMetadata } from "@/hooks/useFetchMetadata";
 import { useUploadImage } from "@/hooks/useUploadImage";
 import styles from "./RecipeRegisterForm.module.css";
 
@@ -14,9 +15,17 @@ export function RecipeRegisterForm() {
     isUploading,
     error: uploadError,
   } = useUploadImage();
+  const {
+    submit: fetchMetadata,
+    isFetching,
+    error: fetchError,
+  } = useFetchMetadata();
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  // URL自動取得で埋まったサムネイル。ユーザーが画像ファイルを選択した場合は
+  // そちらが優先される（送信時の分岐は下のhandleSubmit参照）。
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>(undefined);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -47,23 +56,34 @@ export function RecipeRegisterForm() {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
+  const handleFetchMetadata = async () => {
+    const result = await fetchMetadata(url);
+    if (result) {
+      setTitle(result.title);
+      setThumbnailUrl(result.thumbnailUrl ?? undefined);
+      // 前に選んでいたファイルが残っていると、自動取得したサムネイルより
+      // 優先されてプレビュー・送信に使われてしまうため、ここで解除しておく。
+      setThumbnailFile(null);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let thumbnailUrl: string | undefined;
+    let nextThumbnailUrl = thumbnailUrl;
     if (thumbnailFile) {
       const uploaded = await uploadThumbnail(thumbnailFile);
       if (!uploaded) {
         // アップロード失敗時はここで中断する。エラーはuseUploadImageが保持している。
         return;
       }
-      thumbnailUrl = uploaded.url;
+      nextThumbnailUrl = uploaded.url;
     }
 
     const recipe = await submit({
       title,
       url: url.trim() || undefined,
-      thumbnailUrl,
+      thumbnailUrl: nextThumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
     });
@@ -76,12 +96,21 @@ export function RecipeRegisterForm() {
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
         <label htmlFor="url">URL（任意）</label>
-        <input
-          id="url"
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+        <div className={styles.urlRow}>
+          <input
+            id="url"
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleFetchMetadata}
+            disabled={!url.trim() || isFetching}
+          >
+            {isFetching ? "取得中…" : "自動取得"}
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
@@ -97,6 +126,10 @@ export function RecipeRegisterForm() {
 
       <div className={styles.field}>
         <label htmlFor="thumbnailFile">サムネイル画像（任意）</label>
+        {!thumbnailFile && thumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumbnailUrl} alt="" className={styles.thumbnailPreview} />
+        )}
         <input
           id="thumbnailFile"
           type="file"
@@ -148,9 +181,9 @@ export function RecipeRegisterForm() {
         <p className={styles.tagHint}>Enterキーでも追加できます</p>
       </div>
 
-      {(uploadError || error) && (
+      {(uploadError || error || fetchError) && (
         <p role="alert" className={styles.error}>
-          {uploadError || error}
+          {uploadError || error || fetchError}
         </p>
       )}
 

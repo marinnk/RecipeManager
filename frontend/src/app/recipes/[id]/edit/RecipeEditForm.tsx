@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useDeleteRecipe } from "@/hooks/useDeleteRecipe";
+import { useFetchMetadata } from "@/hooks/useFetchMetadata";
 import { useRecipe } from "@/hooks/useRecipe";
 import { useUpdateRecipe } from "@/hooks/useUpdateRecipe";
 import { useUploadImage } from "@/hooks/useUploadImage";
@@ -52,12 +53,17 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     isSubmitting: isDeleting,
     error: deleteError,
   } = useDeleteRecipe();
+  const {
+    submit: fetchMetadata,
+    isFetching,
+    error: fetchError,
+  } = useFetchMetadata();
 
   const [title, setTitle] = useState(recipe.title);
   const [url, setUrl] = useState(recipe.url ?? "");
-  // 既存のサムネイルURLはユーザーが直接編集する項目ではなく、新しい画像が
-  // 選択された場合のみ送信時に上書きされるので、setterを持たない定数として扱う。
-  const thumbnailUrl = recipe.thumbnailUrl ?? undefined;
+  // 既存のサムネイルURL。URL自動取得で上書きされることがあるのでuseStateにしている
+  // （新しい画像ファイルが選択された場合は、送信時にそちらが優先される）。
+  const [thumbnailUrl, setThumbnailUrl] = useState(recipe.thumbnailUrl ?? undefined);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [memo, setMemo] = useState(recipe.memo ?? "");
   const [tags, setTags] = useState<string[]>(recipe.tags);
@@ -86,6 +92,17 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
 
   const handleThumbnailFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     setThumbnailFile(e.target.files?.[0] ?? null);
+  };
+
+  const handleFetchMetadata = async () => {
+    const result = await fetchMetadata(url);
+    if (result) {
+      setTitle(result.title);
+      setThumbnailUrl(result.thumbnailUrl ?? undefined);
+      // 前に選んでいたファイルが残っていると、自動取得したサムネイルより
+      // 優先されてプレビュー・送信に使われてしまうため、ここで解除しておく。
+      setThumbnailFile(null);
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -129,12 +146,21 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
         <label htmlFor="url">URL（任意）</label>
-        <input
-          id="url"
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+        <div className={styles.urlRow}>
+          <input
+            id="url"
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleFetchMetadata}
+            disabled={!url.trim() || isFetching}
+          >
+            {isFetching ? "取得中…" : "自動取得"}
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
@@ -209,9 +235,9 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
         <p className={styles.tagHint}>Enterキーでも追加できます</p>
       </div>
 
-      {(uploadError || error || deleteError) && (
+      {(uploadError || error || deleteError || fetchError) && (
         <p role="alert" className={styles.error}>
-          {uploadError || error || deleteError}
+          {uploadError || error || deleteError || fetchError}
         </p>
       )}
 
