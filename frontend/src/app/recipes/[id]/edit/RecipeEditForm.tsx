@@ -99,6 +99,19 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
+  const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrl(value);
+    if (!value.trim() && thumbnailUrl) {
+      // 自動取得したサムネイルは元サイトへの直リンクのままなので、URLだけ消して
+      // サムネイルが残ると中途半端で二度手間になる。URLを消したら一緒に消す
+      // （手動でアップロードしたファイルは別状態(thumbnailFile)で管理しているので
+      // 影響しない）。
+      setThumbnailUrl(undefined);
+      lastFetchedUrlRef.current = null;
+    }
+  };
+
   const runFetchMetadata = async (targetUrl: string) => {
     lastFetchedUrlRef.current = targetUrl;
     const result = await fetchMetadata(targetUrl);
@@ -183,7 +196,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             id="url"
             type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={handleUrlChange}
             onBlur={handleUrlBlur}
             onKeyDown={handleUrlKeyDown}
           />

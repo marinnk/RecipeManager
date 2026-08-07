@@ -238,6 +238,22 @@ describe("RecipeEditForm", () => {
     expect(updateRecipe).not.toHaveBeenCalled();
   });
 
+  it("URL欄を空にすると、紐づいていたサムネイルプレビューも消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    const { container } = render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/api/uploads/existing.jpg",
+    );
+
+    await user.clear(screen.getByLabelText("URL（任意）"));
+
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
   it("既存URLを変更せずにフォーカスが外れても自動取得しない", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);

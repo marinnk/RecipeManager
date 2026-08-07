@@ -222,6 +222,26 @@ describe("RecipeRegisterForm", () => {
     expect(createRecipe).not.toHaveBeenCalled();
   });
 
+  it("自動取得後にURL欄を空にすると、サムネイルプレビューも消える", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    const { container } = render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx{enter}",
+    );
+    await screen.findByDisplayValue("肉じゃがの作り方");
+    expect(container.querySelector("img")).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("URL（任意）"));
+
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
   it("URLを変更せずにフォーカスが外れても再取得しない", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchMetadata).mockResolvedValue({
