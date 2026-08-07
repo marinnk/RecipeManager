@@ -52,7 +52,7 @@ describe("RecipeDetail", () => {
       "href",
       "/recipes/1/edit",
     );
-    expect(screen.getByRole("link", { name: "一覧に戻る" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "← 一覧に戻る" })).toHaveAttribute(
       "href",
       "/",
     );
