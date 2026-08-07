@@ -204,6 +204,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             onChange={handleUrlChange}
             onBlur={handleUrlBlur}
             onKeyDown={handleUrlKeyDown}
+            maxLength={2048}
           />
           <button
             type="button"
@@ -233,6 +234,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            maxLength={255}
           />
           <button
             type="button"
@@ -273,6 +275,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             id="memo"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
+            maxLength={2000}
           />
           <button
             type="button"
@@ -308,6 +311,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             value={tagDraft}
             onChange={(e) => setTagDraft(e.target.value)}
             onKeyDown={handleTagKeyDown}
+            maxLength={30}
           />
           <button type="button" onClick={addTag}>
             + 追加

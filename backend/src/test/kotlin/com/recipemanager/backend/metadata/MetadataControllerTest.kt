@@ -52,6 +52,17 @@ class MetadataControllerTest {
     }
 
     @Test
+    fun `urlがURL形式でない場合は400でVALIDATION_ERRORを返す`() {
+        mockMvc
+            .perform(
+                post("/api/metadata/fetch")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(mapOf("url" to "not-a-url"))),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+    }
+
+    @Test
     fun `取得に失敗した場合は422でMETADATA_FETCH_FAILEDを返す`() {
         val url = "https://example.com/unknown"
         every { metadataFetchService.fetch(url) } throws

@@ -4,6 +4,7 @@ import com.recipemanager.backend.image.ImageStorageService
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeResponse
 import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
+import com.recipemanager.backend.tag.InvalidTagException
 import com.recipemanager.backend.tag.Tag
 import com.recipemanager.backend.tag.TagRepository
 import org.springframework.stereotype.Service
@@ -86,6 +87,16 @@ class RecipeService(
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .distinct()
-            .map { name -> tagRepository.findByName(name) ?: tagRepository.save(Tag(name = name)) }
+            .onEach {
+                if (it.length > TAG_NAME_MAX_LENGTH) {
+                    throw InvalidTagException("タグは${TAG_NAME_MAX_LENGTH}文字以内で入力してください")
+                }
+            }.map { name -> tagRepository.findByName(name) ?: tagRepository.save(Tag(name = name)) }
             .toMutableSet()
+
+    companion object {
+        // タグの個数上限はDTO側の@Size(max = 20)で担保しているため、ここでは
+        // トリム後でないと判定できないタグ名1件あたりの文字数上限のみ扱う。
+        private const val TAG_NAME_MAX_LENGTH = 30
+    }
 }
