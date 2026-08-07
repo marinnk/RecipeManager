@@ -107,12 +107,6 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       )}
 
       <div className={styles.actions}>
-        <Link href={`/recipes/${recipe.id}/edit`} className={styles.secondaryButton}>
-          編集する
-        </Link>
-        <Link href="/" className={styles.secondaryButton}>
-          一覧に戻る
-        </Link>
         <button
           type="button"
           className={styles.deleteButton}
@@ -121,6 +115,12 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
         >
           {isDeleting ? "削除中…" : "削除する"}
         </button>
+        <Link href="/" className={styles.secondaryButton}>
+          一覧に戻る
+        </Link>
+        <Link href={`/recipes/${recipe.id}/edit`} className={styles.secondaryButton}>
+          編集する
+        </Link>
       </div>
     </div>
   );

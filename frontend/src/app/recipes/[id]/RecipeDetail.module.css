@@ -76,7 +76,6 @@
 
 .actions {
   display: flex;
-  justify-content: space-between;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
@@ -89,7 +88,13 @@
   text-decoration: none;
 }
 
+/*
+ * 編集画面の削除ボタン（RecipeEditForm.module.css）と同じく、
+ * margin-right: autoで左端に孤立させる。詳細画面と編集画面のどちらでも
+ * 「削除は左端」の位置を揃え、画面が変わっても指の記憶がずれないようにする。
+ */
 .deleteButton {
+  margin-right: auto;
   padding: 0.5rem 1rem;
   border: 1px solid #c0392b;
   border-radius: 4px;
