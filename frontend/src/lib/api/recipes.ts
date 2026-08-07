@@ -60,3 +60,14 @@ export async function updateRecipe(id: number, input: RecipeInput): Promise<Reci
 
   return res.json();
 }
+
+export async function deleteRecipe(id: number): Promise<void> {
+  const res = await fetch(`/api/recipes/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    const body: ApiErrorBody = await res.json();
+    throw new ApiError(res.status, body);
+  }
+}

@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError, getRecipes } from "@/lib/api/recipes";
 import { useRecipes } from "./useRecipes";
@@ -57,5 +57,21 @@ describe("useRecipes", () => {
         "レシピの取得に失敗しました。時間をおいて再度お試しください。",
       ),
     );
+  });
+
+  it("refetchを呼ぶと一覧を再取得する", async () => {
+    vi.mocked(getRecipes).mockReset();
+    vi.mocked(getRecipes).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useRecipes());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getRecipes).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.refetch();
+    });
+
+    await waitFor(() => expect(getRecipes).toHaveBeenCalledTimes(2));
   });
 });

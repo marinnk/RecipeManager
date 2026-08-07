@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useDeleteRecipe } from "@/hooks/useDeleteRecipe";
 import { useRecipe } from "@/hooks/useRecipe";
 import { useUpdateRecipe } from "@/hooks/useUpdateRecipe";
 import { useUploadImage } from "@/hooks/useUploadImage";
@@ -46,6 +47,11 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     isUploading,
     error: uploadError,
   } = useUploadImage();
+  const {
+    submit: deleteRecipe,
+    isSubmitting: isDeleting,
+    error: deleteError,
+  } = useDeleteRecipe();
 
   const [title, setTitle] = useState(recipe.title);
   const [url, setUrl] = useState(recipe.url);
@@ -103,6 +109,16 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
       tags,
     });
     if (updated) {
+      router.push("/");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`「${recipe.title}」を削除しますか？`)) {
+      return;
+    }
+    const success = await deleteRecipe(recipeId);
+    if (success) {
       router.push("/");
     }
   };
@@ -192,13 +208,21 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
         <p className={styles.tagHint}>Enterキーでも追加できます</p>
       </div>
 
-      {(uploadError || error) && (
+      {(uploadError || error || deleteError) && (
         <p role="alert" className={styles.error}>
-          {uploadError || error}
+          {uploadError || error || deleteError}
         </p>
       )}
 
       <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.deleteButton}
+          disabled={isDeleting}
+          onClick={handleDelete}
+        >
+          {isDeleting ? "削除中…" : "削除する"}
+        </button>
         <button type="button" onClick={() => router.push("/")}>
           キャンセル
         </button>

@@ -77,3 +77,9 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+.deleteButton {
+  margin-right: auto;
+  color: #c0392b;
+  border-color: #c0392b;
+}

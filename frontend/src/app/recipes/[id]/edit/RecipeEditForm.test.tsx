@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getRecipe, updateRecipe } from "@/lib/api/recipes";
+import { ApiError, deleteRecipe, getRecipe, updateRecipe } from "@/lib/api/recipes";
 import { uploadImage } from "@/lib/api/images";
 import { RecipeEditForm } from "./RecipeEditForm";
 
@@ -9,7 +9,7 @@ vi.mock("@/lib/api/recipes", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/recipes")>(
     "@/lib/api/recipes",
   );
-  return { ...actual, getRecipe: vi.fn(), updateRecipe: vi.fn() };
+  return { ...actual, getRecipe: vi.fn(), updateRecipe: vi.fn(), deleteRecipe: vi.fn() };
 });
 
 vi.mock("@/lib/api/images", () => ({
@@ -38,6 +38,7 @@ describe("RecipeEditForm", () => {
     vi.mocked(getRecipe).mockReset();
     vi.mocked(updateRecipe).mockReset();
     vi.mocked(uploadImage).mockReset();
+    vi.mocked(deleteRecipe).mockReset();
   });
 
   it("既存のレシピ情報がフォームに初期表示される", async () => {
@@ -151,6 +152,52 @@ describe("RecipeEditForm", () => {
 
     expect(pushMock).toHaveBeenCalledWith("/");
     expect(updateRecipe).not.toHaveBeenCalled();
+  });
+
+  it("削除ボタン押下で確認ダイアログに同意すると削除APIを呼び出しトップに遷移する", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(deleteRecipe).mockResolvedValue(undefined);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "削除する" }));
+
+    expect(window.confirm).toHaveBeenCalledWith("「肉じゃが」を削除しますか？");
+    expect(deleteRecipe).toHaveBeenCalledWith(1);
+    expect(pushMock).toHaveBeenCalledWith("/");
+  });
+
+  it("確認ダイアログでキャンセルすると削除APIは呼ばれない", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "削除する" }));
+
+    expect(deleteRecipe).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("削除に失敗した場合はエラーメッセージを表示し遷移しない", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(deleteRecipe).mockRejectedValue(
+      new ApiError(404, { error: "NOT_FOUND", message: "id=1 のレシピが見つかりません" }),
+    );
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "削除する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "id=1 のレシピが見つかりません",
+    );
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   it("レシピの取得に失敗した場合はエラーメッセージを表示する", async () => {
