@@ -18,10 +18,13 @@ import java.time.Instant
 @Entity
 @Table(name = "recipe")
 class Recipe(
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     var title: String,
+    // 実際のレシピURLはクエリパラメータ等でデフォルトのvarchar(255)を超えることがあるため、
+    // バリデーション側の上限（2048文字、一般的なURLの安全な長さの目安）に合わせて広げてある。
+    @Column(length = 2048)
     var url: String? = null,
-    @Column(name = "thumbnail_url")
+    @Column(name = "thumbnail_url", length = 2048)
     var thumbnailUrl: String? = null,
     @Column(columnDefinition = "TEXT")
     var memo: String? = null,

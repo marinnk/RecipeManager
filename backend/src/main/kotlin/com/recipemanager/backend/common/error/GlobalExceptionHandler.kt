@@ -3,6 +3,7 @@ package com.recipemanager.backend.common.error
 import com.recipemanager.backend.image.InvalidImageFileException
 import com.recipemanager.backend.metadata.MetadataFetchException
 import com.recipemanager.backend.recipe.RecipeNotFoundException
+import com.recipemanager.backend.tag.InvalidTagException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -37,6 +38,12 @@ class GlobalExceptionHandler {
         ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(error = "VALIDATION_ERROR", message = "画像ファイルは8MB以下にしてください"))
+
+    @ExceptionHandler(InvalidTagException::class)
+    fun handleInvalidTag(ex: InvalidTagException): ResponseEntity<ErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(error = "VALIDATION_ERROR", message = ex.message ?: "タグが不正です"))
 
     @ExceptionHandler(RecipeNotFoundException::class)
     fun handleRecipeNotFound(ex: RecipeNotFoundException): ResponseEntity<ErrorResponse> =

@@ -3,6 +3,7 @@ package com.recipemanager.backend.recipe
 import com.recipemanager.backend.image.ImageStorageService
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
+import com.recipemanager.backend.tag.InvalidTagException
 import com.recipemanager.backend.tag.Tag
 import com.recipemanager.backend.tag.TagRepository
 import io.mockk.every
@@ -181,6 +182,39 @@ class RecipeServiceTest {
         recipeService.create(request)
 
         verify(exactly = 0) { tagRepository.save(any()) }
+    }
+
+    @Test
+    fun `タグ名が31文字以上の場合はInvalidTagExceptionが発生する`() {
+        val request =
+            RecipeCreateRequest(
+                title = "肉じゃが",
+                tags = listOf("た".repeat(31)),
+            )
+
+        assertThrows<InvalidTagException> { recipeService.create(request) }
+
+        verify(exactly = 0) { recipeRepository.save(any()) }
+    }
+
+    @Test
+    fun `タグ名がちょうど30文字の場合は登録できる`() {
+        val tagName = "た".repeat(30)
+        val request = RecipeCreateRequest(title = "肉じゃが", tags = listOf(tagName))
+        every { tagRepository.findByName(tagName) } returns null
+        every { tagRepository.save(match { it.name == tagName }) } returns Tag(name = tagName).apply { id = 1L }
+        val savedSlot = slot<Recipe>()
+        every { recipeRepository.save(capture(savedSlot)) } answers {
+            savedSlot.captured.apply {
+                id = 10L
+                createdAt = Instant.now()
+                updatedAt = Instant.now()
+            }
+        }
+
+        val response = recipeService.create(request)
+
+        assertEquals(listOf(tagName), response.tags)
     }
 
     @Test
