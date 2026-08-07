@@ -84,6 +84,14 @@
   gap: 0.5rem;
   /* タグの有無・数でカードの高さが変わっても、編集・削除の位置をカード下端に揃える */
   margin-top: auto;
+  /*
+   * このdiv自体はクリックを受け取らないようにし、ボタン同士の隙間は
+   * 下の.cardLinkのオーバーレイ（カード全体のクリック領域）にそのまま
+   * クリック・カーソルが抜けるようにする。z-indexで手前に重ねている
+   * ぶん、そのままだと隙間部分がこのdivに奪われて、カード全体クリック
+   * が効かない・カーソルが指のままにならない、という状態になっていた。
+   */
+  pointer-events: none;
 }
 
 /*
@@ -91,8 +99,11 @@
  * （カード全体のクリック領域）にクリックが抜けてしまい、押した感触が
  * 不安定になる。padding+borderで実際のボタンとしての当たり判定を
  * 十分な大きさにし、見た目上も編集・削除だとはっきり分かるようにしている。
+ * pointer-events: autoで、親(.cardActions)のpointer-events: noneを
+ * ボタン自身だけ打ち消し、ボタンの上では引き続きクリックを受け取る。
  */
 .editLink {
+  pointer-events: auto;
   padding: 0.375rem 0.75rem;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -102,6 +113,7 @@
 }
 
 .deleteButton {
+  pointer-events: auto;
   padding: 0.375rem 0.75rem;
   border: 1px solid #c0392b;
   border-radius: 4px;
