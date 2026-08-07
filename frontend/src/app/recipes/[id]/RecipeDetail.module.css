@@ -80,13 +80,16 @@
   margin-top: 0.5rem;
 }
 
-.editButton {
+.secondaryButton {
   padding: 0.5rem 1rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .deleteButton {
+  margin-left: auto;
   padding: 0.5rem 1rem;
   border: 1px solid #c0392b;
   border-radius: 4px;

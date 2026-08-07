@@ -52,6 +52,10 @@ describe("RecipeDetail", () => {
       "href",
       "/recipes/1/edit",
     );
+    expect(screen.getByRole("link", { name: "一覧に戻る" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(
       screen.getByText("醤油を控えめにすると美味しい。", { exact: false }),
     ).toBeInTheDocument();
