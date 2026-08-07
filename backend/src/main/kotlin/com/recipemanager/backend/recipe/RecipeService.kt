@@ -1,5 +1,6 @@
 package com.recipemanager.backend.recipe
 
+import com.recipemanager.backend.image.ImageStorageService
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeResponse
 import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 class RecipeService(
     private val recipeRepository: RecipeRepository,
     private val tagRepository: TagRepository,
+    private val imageStorageService: ImageStorageService,
 ) {
     @Transactional(readOnly = true)
     fun findAll(): List<RecipeResponse> = recipeRepository.findAllByOrderByCreatedAtDesc().map { RecipeResponse.from(it) }
@@ -51,6 +53,15 @@ class RecipeService(
 
         val saved = recipeRepository.save(recipe)
         return RecipeResponse.from(saved)
+    }
+
+    @Transactional
+    fun delete(id: Long) {
+        val recipe = recipeRepository.findById(id).orElseThrow { RecipeNotFoundException(id) }
+        // レコードだけでなく、アップロード済みのサムネイル画像ファイルもここで一緒に消しておかないと、
+        // uploadsディレクトリにどのレシピからも参照されない画像が溜まっていく。
+        recipe.thumbnailUrl?.let { imageStorageService.delete(it) }
+        recipeRepository.delete(recipe)
     }
 
     private fun resolveTags(tagNames: List<String>): MutableSet<Tag> =
