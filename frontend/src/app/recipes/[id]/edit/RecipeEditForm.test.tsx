@@ -16,9 +16,9 @@ vi.mock("@/lib/api/images", () => ({
   uploadImage: vi.fn(),
 }));
 
-const pushMock = vi.fn();
+const backMock = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ back: backMock }),
 }));
 
 const recipe = {
@@ -34,7 +34,7 @@ const recipe = {
 
 describe("RecipeEditForm", () => {
   beforeEach(() => {
-    pushMock.mockClear();
+    backMock.mockClear();
     vi.mocked(getRecipe).mockReset();
     vi.mocked(updateRecipe).mockReset();
     vi.mocked(uploadImage).mockReset();
@@ -58,7 +58,7 @@ describe("RecipeEditForm", () => {
     );
   });
 
-  it("内容を変更して送信すると、既存の画像URLを維持したまま更新APIを呼び出しトップに遷移する", async () => {
+  it("内容を変更して送信すると、既存の画像URLを維持したまま更新APIを呼び出し前の画面に戻る", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);
     vi.mocked(updateRecipe).mockResolvedValue({ ...recipe, title: "肉じゃが（改）" });
@@ -77,7 +77,7 @@ describe("RecipeEditForm", () => {
       memo: "美味しい",
       tags: ["和食", "簡単"],
     });
-    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(backMock).toHaveBeenCalled();
   });
 
   it("新しい画像ファイルを選択して送信すると、先にアップロードしてそのURLで更新する", async () => {
@@ -97,7 +97,7 @@ describe("RecipeEditForm", () => {
       1,
       expect.objectContaining({ thumbnailUrl: "/api/uploads/new.jpg" }),
     );
-    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(backMock).toHaveBeenCalled();
   });
 
   it("画像アップロードが失敗した場合、更新は呼ばれずエラーが表示される", async () => {
@@ -120,7 +120,7 @@ describe("RecipeEditForm", () => {
       "画像ファイルは8MB以下にしてください",
     );
     expect(updateRecipe).not.toHaveBeenCalled();
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(backMock).not.toHaveBeenCalled();
   });
 
   it("サーバーのバリデーションエラーを表示し、遷移しない", async () => {
@@ -139,10 +139,10 @@ describe("RecipeEditForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "titleは必須です",
     );
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(backMock).not.toHaveBeenCalled();
   });
 
-  it("キャンセルボタンでトップに遷移する", async () => {
+  it("キャンセルボタンで前の画面に戻る", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);
     render(<RecipeEditForm recipeId={1} />);
@@ -150,11 +150,11 @@ describe("RecipeEditForm", () => {
     await screen.findByLabelText("タイトル");
     await user.click(screen.getByRole("button", { name: "キャンセル" }));
 
-    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(backMock).toHaveBeenCalled();
     expect(updateRecipe).not.toHaveBeenCalled();
   });
 
-  it("削除ボタン押下で確認ダイアログに同意すると削除APIを呼び出しトップに遷移する", async () => {
+  it("削除ボタン押下で確認ダイアログに同意すると削除APIを呼び出し前の画面に戻る", async () => {
     const user = userEvent.setup();
     vi.spyOn(window, "confirm").mockReturnValue(true);
     vi.mocked(getRecipe).mockResolvedValue(recipe);
@@ -166,7 +166,7 @@ describe("RecipeEditForm", () => {
 
     expect(window.confirm).toHaveBeenCalledWith("「肉じゃが」を削除しますか？");
     expect(deleteRecipe).toHaveBeenCalledWith(1);
-    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(backMock).toHaveBeenCalled();
   });
 
   it("確認ダイアログでキャンセルすると削除APIは呼ばれない", async () => {
@@ -179,7 +179,7 @@ describe("RecipeEditForm", () => {
     await user.click(screen.getByRole("button", { name: "削除する" }));
 
     expect(deleteRecipe).not.toHaveBeenCalled();
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(backMock).not.toHaveBeenCalled();
   });
 
   it("削除に失敗した場合はエラーメッセージを表示し遷移しない", async () => {
@@ -197,7 +197,7 @@ describe("RecipeEditForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "id=1 のレシピが見つかりません",
     );
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(backMock).not.toHaveBeenCalled();
   });
 
   it("レシピの取得に失敗した場合はエラーメッセージを表示する", async () => {

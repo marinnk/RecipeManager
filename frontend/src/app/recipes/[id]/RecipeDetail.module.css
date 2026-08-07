@@ -1,0 +1,110 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 32rem;
+}
+
+.backLink {
+  font-size: 0.875rem;
+  align-self: flex-start;
+}
+
+.thumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #eee;
+  border-radius: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tagChip {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: #eee;
+  font-size: 0.875rem;
+}
+
+.meta {
+  margin: 0;
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.sourceLink {
+  align-self: flex-start;
+  font-size: 0.875rem;
+}
+
+.memoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.memoLabel {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+.memo {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.secondaryButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * 編集画面の削除ボタン（RecipeEditForm.module.css）と同じく、
+ * margin-right: autoで左端に孤立させる。詳細画面と編集画面のどちらでも
+ * 「削除は左端」の位置を揃え、画面が変わっても指の記憶がずれないようにする。
+ */
+.deleteButton {
+  margin-right: auto;
+  padding: 0.5rem 1rem;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background: none;
+  color: #c0392b;
+  cursor: pointer;
+}
+
+.deleteButton:disabled {
+  color: #999;
+  border-color: #999;
+  cursor: not-allowed;
+}

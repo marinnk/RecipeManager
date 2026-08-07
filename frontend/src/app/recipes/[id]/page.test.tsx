@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getRecipe } from "@/lib/api/recipes";
-import EditRecipePage from "./page";
+import RecipeDetailPage from "./page";
 
 vi.mock("@/lib/api/recipes", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api/recipes")>(
@@ -11,11 +11,11 @@ vi.mock("@/lib/api/recipes", async () => {
 });
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
-describe("EditRecipePage", () => {
-  it("見出しを表示する", async () => {
+describe("RecipeDetailPage", () => {
+  it("レシピタイトルを見出しとして表示する", async () => {
     vi.mocked(getRecipe).mockResolvedValue({
       id: 1,
       title: "肉じゃが",
@@ -27,11 +27,11 @@ describe("EditRecipePage", () => {
       updatedAt: "2026-01-01T00:00:00Z",
     });
 
-    const page = await EditRecipePage({ params: Promise.resolve({ id: "1" }) });
+    const page = await RecipeDetailPage({ params: Promise.resolve({ id: "1" }) });
     render(page);
 
     expect(
-      screen.getByRole("heading", { name: "レシピを編集" }),
+      await screen.findByRole("heading", { name: "肉じゃが" }),
     ).toBeInTheDocument();
   });
 });

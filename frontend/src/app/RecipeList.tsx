@@ -54,18 +54,20 @@ export function RecipeList() {
       <ul className={styles.grid}>
         {recipes.map((recipe) => (
           <li key={recipe.id} className={styles.card}>
-            {recipe.thumbnailUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={recipe.thumbnailUrl}
-                alt=""
-                className={styles.thumbnail}
-              />
-            ) : (
-              <div className={styles.thumbnailPlaceholder} />
-            )}
-            <div className={styles.body}>
+            <Link href={`/recipes/${recipe.id}`} className={styles.cardLink}>
+              {recipe.thumbnailUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={recipe.thumbnailUrl}
+                  alt=""
+                  className={styles.thumbnail}
+                />
+              ) : (
+                <div className={styles.thumbnailPlaceholder} />
+              )}
               <h3 className={styles.title}>{recipe.title}</h3>
+            </Link>
+            <div className={styles.body}>
               <div className={styles.tagList}>
                 {recipe.tags.map((tag) => (
                   <span key={tag} className={styles.tagChip}>
@@ -74,9 +76,6 @@ export function RecipeList() {
                 ))}
               </div>
               <div className={styles.cardActions}>
-                <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
-                  編集
-                </Link>
                 <button
                   type="button"
                   className={styles.deleteButton}
@@ -85,6 +84,9 @@ export function RecipeList() {
                 >
                   削除
                 </button>
+                <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
+                  編集
+                </Link>
               </div>
             </div>
           </li>
