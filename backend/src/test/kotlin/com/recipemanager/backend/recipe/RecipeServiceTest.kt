@@ -1,5 +1,6 @@
 package com.recipemanager.backend.recipe
 
+import com.recipemanager.backend.image.ImageStorageService
 import com.recipemanager.backend.recipe.dto.RecipeCreateRequest
 import com.recipemanager.backend.recipe.dto.RecipeUpdateRequest
 import com.recipemanager.backend.tag.Tag
@@ -17,7 +18,8 @@ import java.util.Optional
 class RecipeServiceTest {
     private val recipeRepository = mockk<RecipeRepository>()
     private val tagRepository = mockk<TagRepository>()
-    private val recipeService = RecipeService(recipeRepository, tagRepository)
+    private val imageStorageService = mockk<ImageStorageService>(relaxed = true)
+    private val recipeService = RecipeService(recipeRepository, tagRepository, imageStorageService)
 
     @Test
     fun `登録済みレシピを作成日時の新しい順で返す`() {
@@ -211,5 +213,58 @@ class RecipeServiceTest {
         assertThrows<RecipeNotFoundException> { recipeService.update(99L, request) }
 
         verify(exactly = 0) { recipeRepository.save(any()) }
+    }
+
+    @Test
+    fun `存在するIDで削除するとレシピが削除される`() {
+        val recipe =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+            }
+        every { recipeRepository.findById(1L) } returns Optional.of(recipe)
+        every { recipeRepository.delete(recipe) } returns Unit
+
+        recipeService.delete(1L)
+
+        verify(exactly = 1) { recipeRepository.delete(recipe) }
+    }
+
+    @Test
+    fun `サムネイル画像があるレシピを削除すると画像ファイルも削除される`() {
+        val recipe =
+            Recipe(
+                title = "肉じゃが",
+                url = "https://www.youtube.com/watch?v=xxxx",
+                thumbnailUrl = "/api/uploads/xxxx.jpg",
+            ).apply { id = 1L }
+        every { recipeRepository.findById(1L) } returns Optional.of(recipe)
+        every { recipeRepository.delete(recipe) } returns Unit
+
+        recipeService.delete(1L)
+
+        verify(exactly = 1) { imageStorageService.delete("/api/uploads/xxxx.jpg") }
+    }
+
+    @Test
+    fun `サムネイル画像が無いレシピを削除しても画像削除は呼ばれない`() {
+        val recipe =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+            }
+        every { recipeRepository.findById(1L) } returns Optional.of(recipe)
+        every { recipeRepository.delete(recipe) } returns Unit
+
+        recipeService.delete(1L)
+
+        verify(exactly = 0) { imageStorageService.delete(any()) }
+    }
+
+    @Test
+    fun `存在しないIDで削除するとRecipeNotFoundExceptionが発生する`() {
+        every { recipeRepository.findById(99L) } returns Optional.empty()
+
+        assertThrows<RecipeNotFoundException> { recipeService.delete(99L) }
+
+        verify(exactly = 0) { recipeRepository.delete(any()) }
     }
 }

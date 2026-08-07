@@ -34,6 +34,15 @@ class ImageStorageService(
         return "$URL_PREFIX/$filename"
     }
 
+    fun delete(url: String) {
+        // store()が返すURL形式（"/api/uploads/xxx"）以外は想定外の呼び出しとして何もしない。
+        if (!url.startsWith("$URL_PREFIX/")) return
+
+        val filename = url.removePrefix("$URL_PREFIX/")
+        val root = Paths.get(uploadDir).toAbsolutePath().normalize()
+        Files.deleteIfExists(root.resolve(filename))
+    }
+
     private fun extensionFor(contentType: String?): String =
         ALLOWED_CONTENT_TYPES[contentType]
             ?: throw InvalidImageFileException("jpeg・png・webp形式の画像のみアップロードできます")

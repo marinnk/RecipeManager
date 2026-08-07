@@ -63,4 +63,26 @@ class ImageStorageServiceTest {
 
         assertNotEquals(url1, url2)
     }
+
+    @Test
+    fun `保存済みの画像を削除するとファイルが消える`() {
+        val file = MockMultipartFile("file", "photo.jpg", "image/jpeg", "dummy".toByteArray())
+        val url = service.store(file)
+        val path = tempDir.resolve(url.removePrefix("/api/uploads/"))
+        assertTrue(Files.exists(path))
+
+        service.delete(url)
+
+        assertTrue(Files.notExists(path))
+    }
+
+    @Test
+    fun `存在しないファイルを削除しようとしても例外にならない`() {
+        service.delete("/api/uploads/${java.util.UUID.randomUUID()}.jpg")
+    }
+
+    @Test
+    fun `想定外の形式のURLを削除しようとしても例外にならない`() {
+        service.delete("https://example.com/photo.jpg")
+    }
 }
