@@ -76,6 +76,7 @@
 
 .actions {
   display: flex;
+  justify-content: space-between;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
@@ -89,7 +90,6 @@
 }
 
 .deleteButton {
-  margin-left: auto;
   padding: 0.5rem 1rem;
   border: 1px solid #c0392b;
   border-radius: 4px;

@@ -109,7 +109,9 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
       tags,
     });
     if (updated) {
-      router.push("/");
+      // 一覧・詳細のどちらから編集画面に来たかによって戻り先を変えたいので、
+      // 常に"/"へ飛ばすのではなく、ブラウザ履歴を1つ戻る（＝来た画面に戻る）。
+      router.back();
     }
   };
 
@@ -119,7 +121,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     }
     const success = await deleteRecipe(recipeId);
     if (success) {
-      router.push("/");
+      router.back();
     }
   };
 
@@ -223,7 +225,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
         >
           {isDeleting ? "削除中…" : "削除する"}
         </button>
-        <button type="button" onClick={() => router.push("/")}>
+        <button type="button" onClick={() => router.back()}>
           キャンセル
         </button>
         <button type="submit" disabled={isSubmitting || isUploading}>

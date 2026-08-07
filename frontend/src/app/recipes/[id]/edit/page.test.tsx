@@ -11,7 +11,7 @@ vi.mock("@/lib/api/recipes", async () => {
 });
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
 }));
 
 describe("EditRecipePage", () => {
