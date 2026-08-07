@@ -1,6 +1,6 @@
 export type RecipeInput = {
   title: string;
-  url: string;
+  url?: string;
   thumbnailUrl?: string;
   memo?: string;
   tags: string[];
@@ -9,7 +9,7 @@ export type RecipeInput = {
 export type Recipe = {
   id: number;
   title: string;
-  url: string;
+  url: string | null;
   thumbnailUrl: string | null;
   memo: string | null;
   tags: string[];

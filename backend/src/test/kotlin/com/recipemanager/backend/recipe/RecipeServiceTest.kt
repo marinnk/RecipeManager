@@ -81,6 +81,25 @@ class RecipeServiceTest {
     }
 
     @Test
+    fun `URLが未指定でもレシピが登録できる`() {
+        val request = RecipeCreateRequest(title = "肉じゃが", url = null)
+
+        val savedSlot = slot<Recipe>()
+        every { recipeRepository.save(capture(savedSlot)) } answers {
+            savedSlot.captured.apply {
+                id = 10L
+                createdAt = Instant.now()
+                updatedAt = Instant.now()
+            }
+        }
+
+        val response = recipeService.create(request)
+
+        assertEquals("肉じゃが", response.title)
+        assertEquals(null, response.url)
+    }
+
+    @Test
     fun `既存タグは再利用され新規タグとして重複作成されない`() {
         val request =
             RecipeCreateRequest(
@@ -153,6 +172,23 @@ class RecipeServiceTest {
         assertEquals("新メモ", response.memo)
         assertEquals(listOf("和食"), response.tags)
         verify(exactly = 1) { recipeRepository.save(any()) }
+    }
+
+    @Test
+    fun `URLが未指定でもレシピが更新できる`() {
+        val recipe =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+                createdAt = Instant.now()
+                updatedAt = Instant.now()
+            }
+        val request = RecipeUpdateRequest(title = "肉じゃが", url = null)
+        every { recipeRepository.findById(1L) } returns Optional.of(recipe)
+        every { recipeRepository.save(any()) } answers { firstArg() }
+
+        val response = recipeService.update(1L, request)
+
+        assertEquals(null, response.url)
     }
 
     @Test

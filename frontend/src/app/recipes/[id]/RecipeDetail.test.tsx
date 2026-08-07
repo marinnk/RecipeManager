@@ -69,6 +69,16 @@ describe("RecipeDetail", () => {
     expect(screen.queryByText("メモ")).not.toBeInTheDocument();
   });
 
+  it("urlが無い場合は元サイトを開くリンクを表示しない", async () => {
+    vi.mocked(getRecipe).mockResolvedValue({ ...recipe, url: null });
+    render(<RecipeDetail recipeId={1} />);
+
+    await screen.findByRole("heading", { name: "肉じゃが" });
+    expect(
+      screen.queryByRole("link", { name: "元サイトを開く ↗" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("削除ボタン押下で確認ダイアログに同意すると削除APIを呼び出し一覧に遷移する", async () => {
     const user = userEvent.setup();
     vi.spyOn(window, "confirm").mockReturnValue(true);

@@ -62,7 +62,7 @@ export function RecipeRegisterForm() {
 
     const recipe = await submit({
       title,
-      url,
+      url: url.trim() || undefined,
       thumbnailUrl,
       memo: memo.trim() || undefined,
       tags,
@@ -75,13 +75,12 @@ export function RecipeRegisterForm() {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.field}>
-        <label htmlFor="url">URL</label>
+        <label htmlFor="url">URL（任意）</label>
         <input
           id="url"
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          required
         />
       </div>
 
