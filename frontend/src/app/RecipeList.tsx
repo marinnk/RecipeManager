@@ -72,16 +72,16 @@ export function RecipeList() {
         onClear={handleClearFilter}
       />
 
-      {isLoading && <p>読み込み中…</p>}
+      {isLoading && <p className="hint-text">読み込み中…</p>}
 
       {!isLoading && error && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className="error-text">
           {error}
         </p>
       )}
 
       {!isLoading && !error && recipes.length === 0 && (
-        <p className={styles.empty}>
+        <p className="hint-text">
           {isFiltering
             ? "条件に一致するレシピが見つかりません。"
             : "レシピがありません。まずは登録しましょう。"}
@@ -91,7 +91,7 @@ export function RecipeList() {
       {!isLoading && !error && recipes.length > 0 && (
         <>
           {deleteError && (
-            <p role="alert" className={styles.error}>
+            <p role="alert" className="error-text">
               {deleteError}
             </p>
           )}
@@ -114,7 +114,7 @@ export function RecipeList() {
                 <div className={styles.body}>
                   <div className={styles.tagList}>
                     {recipe.tags.map((tag) => (
-                      <span key={tag} className={styles.tagChip}>
+                      <span key={tag} className="tag">
                         #{tag}
                       </span>
                     ))}
@@ -122,13 +122,16 @@ export function RecipeList() {
                   <div className={styles.cardActions}>
                     <button
                       type="button"
-                      className={styles.deleteButton}
+                      className={`${styles.deleteButton} btn btn-danger`}
                       disabled={isDeleting}
                       onClick={() => handleDelete(recipe)}
                     >
                       削除
                     </button>
-                    <Link href={`/recipes/${recipe.id}/edit`} className={styles.editLink}>
+                    <Link
+                      href={`/recipes/${recipe.id}/edit`}
+                      className={`${styles.editLink} btn btn-ghost`}
+                    >
                       編集
                     </Link>
                   </div>

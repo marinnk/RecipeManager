@@ -208,6 +208,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
           />
           <button
             type="button"
+            className="btn btn-ghost"
             onClick={handleFetchMetadataClick}
             disabled={!url.trim() || isFetching}
           >
@@ -215,6 +216,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
           </button>
           <button
             type="button"
+            className="btn-icon"
             aria-label="URLを削除"
             onClick={clearUrl}
             disabled={!url.trim()}
@@ -222,7 +224,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             ×
           </button>
         </div>
-        <p className={styles.urlHint}>Enterキーでも取得できます</p>
+        <p className={`${styles.urlHint} hint-text`}>Enterキーでも取得できます</p>
       </div>
 
       <div className={styles.field}>
@@ -238,6 +240,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
           />
           <button
             type="button"
+            className="btn-icon"
             aria-label="タイトルを削除"
             onClick={() => setTitle("")}
             disabled={!title.trim()}
@@ -264,7 +267,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
           onChange={handleThumbnailFileChange}
         />
         {isUploading && (
-          <p className={styles.uploadStatus}>アップロード中…</p>
+          <p className="hint-text">アップロード中…</p>
         )}
       </div>
 
@@ -279,6 +282,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
           />
           <button
             type="button"
+            className="btn-icon"
             aria-label="メモを削除"
             onClick={() => setMemo("")}
             disabled={!memo.trim()}
@@ -292,7 +296,7 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
         <label htmlFor="tagDraft">タグ</label>
         <div className={styles.tagList}>
           {tags.map((tag) => (
-            <span key={tag} className={styles.tagChip}>
+            <span key={tag} className="tag">
               #{tag}
               <button
                 type="button"
@@ -313,15 +317,15 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             onKeyDown={handleTagKeyDown}
             maxLength={30}
           />
-          <button type="button" onClick={addTag}>
+          <button type="button" className="btn btn-ghost" onClick={addTag}>
             + 追加
           </button>
         </div>
-        <p className={styles.tagHint}>Enterキーでも追加できます</p>
+        <p className={`${styles.tagHint} hint-text`}>Enterキーでも追加できます</p>
       </div>
 
       {(uploadError || error || deleteError || fetchError) && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className="error-text">
           {uploadError || error || deleteError || fetchError}
         </p>
       )}
@@ -329,16 +333,16 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
       <div className={styles.actions}>
         <button
           type="button"
-          className={styles.deleteButton}
+          className={`${styles.deleteButton} btn btn-danger`}
           disabled={isDeleting}
           onClick={handleDelete}
         >
           {isDeleting ? "削除中…" : "削除する"}
         </button>
-        <button type="button" onClick={() => router.back()}>
+        <button type="button" className="btn btn-ghost" onClick={() => router.back()}>
           キャンセル
         </button>
-        <button type="submit" disabled={isSubmitting || isUploading}>
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting || isUploading}>
           {isSubmitting || isUploading ? "更新中…" : "更新する"}
         </button>
       </div>

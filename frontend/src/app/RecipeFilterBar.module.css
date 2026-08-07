@@ -3,13 +3,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .keywordInput {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  flex: 1;
   min-width: 200px;
 }
 
@@ -17,29 +15,4 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.tagChip {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 999px;
-  background: #fff;
-  color: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.tagChipSelected {
-  background: #333;
-  border-color: #333;
-  color: #fff;
-}
-
-.clearButton {
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: none;
-  font-size: 0.875rem;
-  cursor: pointer;
 }
