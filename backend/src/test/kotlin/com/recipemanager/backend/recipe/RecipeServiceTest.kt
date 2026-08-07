@@ -52,6 +52,66 @@ class RecipeServiceTest {
     }
 
     @Test
+    fun `キーワードを指定するとタイトルで絞り込むクエリが呼ばれる`() {
+        val recipe =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+                createdAt = Instant.now()
+                updatedAt = Instant.now()
+            }
+        every { recipeRepository.search("肉じゃが", emptyList(), 0L) } returns listOf(recipe)
+
+        val response = recipeService.findAll(keyword = "肉じゃが")
+
+        assertEquals(listOf("肉じゃが"), response.map { it.title })
+        verify(exactly = 0) { recipeRepository.findAllByOrderByCreatedAtDesc() }
+    }
+
+    @Test
+    fun `キーワードの前後の空白は取り除かれる`() {
+        every { recipeRepository.search("肉じゃが", emptyList(), 0L) } returns emptyList()
+
+        recipeService.findAll(keyword = "  肉じゃが  ")
+
+        verify(exactly = 1) { recipeRepository.search("肉じゃが", emptyList(), 0L) }
+    }
+
+    @Test
+    fun `キーワードが空白のみのときは絞り込み無しとして扱われる`() {
+        every { recipeRepository.findAllByOrderByCreatedAtDesc() } returns emptyList()
+
+        recipeService.findAll(keyword = "   ")
+
+        verify(exactly = 1) { recipeRepository.findAllByOrderByCreatedAtDesc() }
+        verify(exactly = 0) { recipeRepository.search(any(), any(), any()) }
+    }
+
+    @Test
+    fun `タグを指定すると重複を除いたタグ名とタグ数で絞り込むクエリが呼ばれる`() {
+        val recipe =
+            Recipe(title = "肉じゃが", url = "https://www.youtube.com/watch?v=xxxx").apply {
+                id = 1L
+                createdAt = Instant.now()
+                updatedAt = Instant.now()
+            }
+        every { recipeRepository.search(null, listOf("和食", "時短"), 2L) } returns listOf(recipe)
+
+        val response = recipeService.findAll(tags = listOf("和食", "時短", "和食"))
+
+        assertEquals(listOf("肉じゃが"), response.map { it.title })
+        verify(exactly = 1) { recipeRepository.search(null, listOf("和食", "時短"), 2L) }
+    }
+
+    @Test
+    fun `キーワードとタグを両方指定すると両方の条件でクエリが呼ばれる`() {
+        every { recipeRepository.search("肉じゃが", listOf("和食"), 1L) } returns emptyList()
+
+        recipeService.findAll(keyword = "肉じゃが", tags = listOf("和食"))
+
+        verify(exactly = 1) { recipeRepository.search("肉じゃが", listOf("和食"), 1L) }
+    }
+
+    @Test
     fun `登録するとタイトル・URL・タグを持つレシピが保存される`() {
         val request =
             RecipeCreateRequest(

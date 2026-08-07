@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -21,7 +22,10 @@ class RecipeController(
     private val recipeService: RecipeService,
 ) {
     @GetMapping
-    fun list(): ResponseEntity<List<RecipeResponse>> = ResponseEntity.ok(recipeService.findAll())
+    fun list(
+        @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) tags: List<String>?,
+    ): ResponseEntity<List<RecipeResponse>> = ResponseEntity.ok(recipeService.findAll(keyword, tags ?: emptyList()))
 
     @GetMapping("/{id}")
     fun get(

@@ -16,7 +16,24 @@ class RecipeService(
     private val imageStorageService: ImageStorageService,
 ) {
     @Transactional(readOnly = true)
-    fun findAll(): List<RecipeResponse> = recipeRepository.findAllByOrderByCreatedAtDesc().map { RecipeResponse.from(it) }
+    fun findAll(
+        keyword: String? = null,
+        tags: List<String> = emptyList(),
+    ): List<RecipeResponse> {
+        val normalizedKeyword = keyword?.trim()?.takeIf { it.isNotEmpty() }
+        val normalizedTags = tags.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
+        // 検索条件が何も指定されていない場合は、既存の全件取得クエリをそのまま使う。
+        // JOIN/GROUP BYを伴う search() を常に使わないのは、絞り込み無しの一番よく使う経路を
+        // シンプルなクエリのまま保つため。
+        if (normalizedKeyword == null && normalizedTags.isEmpty()) {
+            return recipeRepository.findAllByOrderByCreatedAtDesc().map { RecipeResponse.from(it) }
+        }
+
+        return recipeRepository
+            .search(normalizedKeyword, normalizedTags, normalizedTags.size.toLong())
+            .map { RecipeResponse.from(it) }
+    }
 
     @Transactional(readOnly = true)
     fun findById(id: Long): RecipeResponse {
