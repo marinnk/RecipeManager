@@ -50,6 +50,30 @@ class MetadataFetchServiceTest {
     }
 
     @Test
+    fun `YouTubeのURLでoEmbedが失敗した場合はOgpFetcherにフォールバックする`() {
+        val url = "https://www.youtube.com/watch?v=xxxx"
+        every { youtubeOembedClient.isYoutubeUrl(url) } returns true
+        every { youtubeOembedClient.fetch(url) } throws MetadataFetchException("情報を取得できませんでした。手動で入力してください")
+        every { ogpFetcher.fetch(url) } returns
+            OgpResult(title = "肉じゃがの作り方", thumbnailUrl = "https://i.ytimg.com/vi/xxxx/maxresdefault.jpg")
+
+        val response = service.fetch(url)
+
+        assertEquals("肉じゃがの作り方", response.title)
+        assertEquals("https://i.ytimg.com/vi/xxxx/maxresdefault.jpg", response.thumbnailUrl)
+    }
+
+    @Test
+    fun `YouTubeのURLでoEmbed-OGPどちらも失敗した場合はMetadataFetchExceptionを投げる`() {
+        val url = "https://www.youtube.com/watch?v=xxxx"
+        every { youtubeOembedClient.isYoutubeUrl(url) } returns true
+        every { youtubeOembedClient.fetch(url) } throws MetadataFetchException("情報を取得できませんでした。手動で入力してください")
+        every { ogpFetcher.fetch(url) } throws MetadataFetchException("情報を取得できませんでした。手動で入力してください")
+
+        assertThrows<MetadataFetchException> { service.fetch(url) }
+    }
+
+    @Test
     fun `http-https以外のスキームの場合はMetadataFetchExceptionを投げる`() {
         assertThrows<MetadataFetchException> { service.fetch("file:///etc/passwd") }
         verify(exactly = 0) { youtubeOembedClient.isYoutubeUrl(any()) }

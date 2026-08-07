@@ -20,13 +20,18 @@ class MetadataFetchService(
             throw MetadataFetchException(FAILURE_MESSAGE)
         }
 
-        return if (youtubeOembedClient.isYoutubeUrl(normalizedUrl)) {
-            val result = youtubeOembedClient.fetch(normalizedUrl)
-            MetadataFetchResponse(title = result.title, thumbnailUrl = result.thumbnailUrl)
-        } else {
-            val result = ogpFetcher.fetch(normalizedUrl)
-            MetadataFetchResponse(title = result.title, thumbnailUrl = result.thumbnailUrl)
+        if (youtubeOembedClient.isYoutubeUrl(normalizedUrl)) {
+            // 埋め込みが許可されていない動画などではoEmbedが失敗する（401等）ことがある。
+            // その場合も動画ページ自体のOGPタグは公開されていることが多いため、
+            // 諦めずにOGP取得にフォールバックする。
+            val oembedResult = runCatching { youtubeOembedClient.fetch(normalizedUrl) }.getOrNull()
+            if (oembedResult != null) {
+                return MetadataFetchResponse(title = oembedResult.title, thumbnailUrl = oembedResult.thumbnailUrl)
+            }
         }
+
+        val result = ogpFetcher.fetch(normalizedUrl)
+        return MetadataFetchResponse(title = result.title, thumbnailUrl = result.thumbnailUrl)
     }
 
     companion object {
