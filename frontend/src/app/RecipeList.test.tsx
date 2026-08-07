@@ -59,6 +59,10 @@ describe("RecipeList", () => {
     expect(screen.getByText("肉じゃが")).toBeInTheDocument();
     expect(screen.getByText("#和食")).toBeInTheDocument();
     expect(screen.getByText("#煮物")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "肉じゃが" })).toHaveAttribute(
+      "href",
+      "/recipes/1",
+    );
     expect(screen.getByRole("link", { name: "編集" })).toHaveAttribute(
       "href",
       "/recipes/1/edit",
