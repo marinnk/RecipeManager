@@ -178,6 +178,54 @@ describe("RecipeRegisterForm", () => {
     );
   });
 
+  it("URL欄からフォーカスが外れると自動で取得する", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/xxxx/hqdefault.jpg",
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.tab();
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue(
+      "肉じゃがの作り方",
+    );
+  });
+
+  it("URLを変更せずにフォーカスが外れても再取得しない", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "肉じゃがの作り方",
+      thumbnailUrl: null,
+    });
+    render(<RecipeRegisterForm />);
+
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=xxxx",
+    );
+    await user.tab();
+    await screen.findByDisplayValue("肉じゃがの作り方");
+
+    await user.clear(screen.getByLabelText("タイトル"));
+    await user.type(screen.getByLabelText("タイトル"), "自分でつけたタイトル");
+
+    // URL欄をクリックして、変更せずにまたフォーカスを外す。
+    await user.click(screen.getByLabelText("URL（任意）"));
+    await user.tab();
+
+    expect(fetchMetadata).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("タイトル")).toHaveValue("自分でつけたタイトル");
+  });
+
   it("自動取得に失敗した場合はエラーメッセージを表示する", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchMetadata).mockRejectedValue(

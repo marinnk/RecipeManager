@@ -192,6 +192,43 @@ describe("RecipeEditForm", () => {
     );
   });
 
+  it("URL欄からフォーカスが外れると自動で取得する", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    vi.mocked(fetchMetadata).mockResolvedValue({
+      title: "唐揚げの作り方",
+      thumbnailUrl: "https://i.ytimg.com/vi/yyyy/hqdefault.jpg",
+    });
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.clear(screen.getByLabelText("URL（任意）"));
+    await user.type(
+      screen.getByLabelText("URL（任意）"),
+      "https://www.youtube.com/watch?v=yyyy",
+    );
+    await user.tab();
+
+    expect(fetchMetadata).toHaveBeenCalledWith(
+      "https://www.youtube.com/watch?v=yyyy",
+    );
+    expect(await screen.findByLabelText("タイトル")).toHaveValue("唐揚げの作り方");
+  });
+
+  it("既存URLを変更せずにフォーカスが外れても自動取得しない", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    // 既存のURLを編集せず、クリックしてフォーカスを当てて外すだけ。
+    await user.click(screen.getByLabelText("URL（任意）"));
+    await user.tab();
+
+    expect(fetchMetadata).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("タイトル")).toHaveValue("肉じゃが");
+  });
+
   it("自動取得に失敗した場合はエラーメッセージを表示する", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);

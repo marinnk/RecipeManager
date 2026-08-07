@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useDeleteRecipe } from "@/hooks/useDeleteRecipe";
 import { useFetchMetadata } from "@/hooks/useFetchMetadata";
 import { useRecipe } from "@/hooks/useRecipe";
@@ -68,6 +68,11 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
   const [memo, setMemo] = useState(recipe.memo ?? "");
   const [tags, setTags] = useState<string[]>(recipe.tags);
   const [tagDraft, setTagDraft] = useState("");
+  // URL欄からフォーカスが外れるたびに毎回自動取得すると、取得後にタイトルを
+  // 手で直しても同じURLのままクリックし直しただけで上書きされてしまう。
+  // 直前に取得したURLを覚えておき、変わっていなければ再取得しないようにする。
+  // 初期値は既存のURLにしておき、編集せずにURL欄を触っただけでは発火しないようにする。
+  const lastFetchedUrlRef = useRef<string | null>(recipe.url ?? null);
 
   const addTag = () => {
     const trimmed = tagDraft.trim();
@@ -94,8 +99,9 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
-  const handleFetchMetadata = async () => {
-    const result = await fetchMetadata(url.trim());
+  const runFetchMetadata = async (targetUrl: string) => {
+    lastFetchedUrlRef.current = targetUrl;
+    const result = await fetchMetadata(targetUrl);
     if (result) {
       setTitle(result.title);
       setThumbnailUrl(result.thumbnailUrl ?? undefined);
@@ -103,6 +109,20 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
       // 優先されてプレビュー・送信に使われてしまうため、ここで解除しておく。
       setThumbnailFile(null);
     }
+  };
+
+  // ボタンを押したときは、直前と同じURLでも明示的なやり直しとして必ず取得する。
+  const handleFetchMetadataClick = () => {
+    runFetchMetadata(url.trim());
+  };
+
+  // URL欄からフォーカスが外れたときは、URLが変わっている場合だけ自動で取得する。
+  const handleUrlBlur = () => {
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === lastFetchedUrlRef.current) {
+      return;
+    }
+    runFetchMetadata(trimmed);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -152,10 +172,11 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            onBlur={handleUrlBlur}
           />
           <button
             type="button"
-            onClick={handleFetchMetadata}
+            onClick={handleFetchMetadataClick}
             disabled={!url.trim() || isFetching}
           >
             {isFetching ? "取得中…" : "自動取得"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useCreateRecipe } from "@/hooks/useCreateRecipe";
 import { useFetchMetadata } from "@/hooks/useFetchMetadata";
 import { useUploadImage } from "@/hooks/useUploadImage";
@@ -30,6 +30,10 @@ export function RecipeRegisterForm() {
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
+  // URL欄からフォーカスが外れるたびに毎回自動取得すると、取得後にタイトルを
+  // 手で直しても同じURLのままクリックし直しただけで上書きされてしまう。
+  // 直前に取得したURLを覚えておき、変わっていなければ再取得しないようにする。
+  const lastFetchedUrlRef = useRef<string | null>(null);
 
   const addTag = () => {
     const trimmed = tagDraft.trim();
@@ -56,8 +60,9 @@ export function RecipeRegisterForm() {
     setThumbnailFile(e.target.files?.[0] ?? null);
   };
 
-  const handleFetchMetadata = async () => {
-    const result = await fetchMetadata(url.trim());
+  const runFetchMetadata = async (targetUrl: string) => {
+    lastFetchedUrlRef.current = targetUrl;
+    const result = await fetchMetadata(targetUrl);
     if (result) {
       setTitle(result.title);
       setThumbnailUrl(result.thumbnailUrl ?? undefined);
@@ -65,6 +70,20 @@ export function RecipeRegisterForm() {
       // 優先されてプレビュー・送信に使われてしまうため、ここで解除しておく。
       setThumbnailFile(null);
     }
+  };
+
+  // ボタンを押したときは、直前と同じURLでも明示的なやり直しとして必ず取得する。
+  const handleFetchMetadataClick = () => {
+    runFetchMetadata(url.trim());
+  };
+
+  // URL欄からフォーカスが外れたときは、URLが変わっている場合だけ自動で取得する。
+  const handleUrlBlur = () => {
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === lastFetchedUrlRef.current) {
+      return;
+    }
+    runFetchMetadata(trimmed);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -102,10 +121,11 @@ export function RecipeRegisterForm() {
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            onBlur={handleUrlBlur}
           />
           <button
             type="button"
-            onClick={handleFetchMetadata}
+            onClick={handleFetchMetadataClick}
             disabled={!url.trim() || isFetching}
           >
             {isFetching ? "取得中…" : "自動取得"}
