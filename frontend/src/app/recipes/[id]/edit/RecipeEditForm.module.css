@@ -49,12 +49,24 @@
   flex: 1;
 }
 
-.urlRow {
+.urlRow,
+.titleRow {
   display: flex;
   gap: 0.5rem;
 }
 
-.urlRow input {
+.urlRow input,
+.titleRow input {
+  flex: 1;
+}
+
+.memoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.memoRow textarea {
   flex: 1;
 }
 

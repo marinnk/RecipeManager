@@ -228,6 +228,36 @@ describe("RecipeRegisterForm", () => {
     expect(screen.getByRole("button", { name: "URLを削除" })).toBeDisabled();
   });
 
+  it("タイトル削除ボタンでタイトルだけ空にできる", async () => {
+    const user = userEvent.setup();
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "タイトルを削除" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
+    await user.type(screen.getByLabelText("メモ（任意）"), "美味しい");
+
+    await user.click(screen.getByRole("button", { name: "タイトルを削除" }));
+
+    expect(screen.getByLabelText("タイトル")).toHaveValue("");
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("美味しい");
+  });
+
+  it("メモ削除ボタンでメモだけ空にできる", async () => {
+    const user = userEvent.setup();
+    render(<RecipeRegisterForm />);
+
+    expect(screen.getByRole("button", { name: "メモを削除" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("タイトル"), "肉じゃが");
+    await user.type(screen.getByLabelText("メモ（任意）"), "美味しい");
+
+    await user.click(screen.getByRole("button", { name: "メモを削除" }));
+
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("");
+    expect(screen.getByLabelText("タイトル")).toHaveValue("肉じゃが");
+  });
+
   it("削除ボタン押下でURL欄とサムネイルプレビューが消える", async () => {
     const user = userEvent.setup();
     vi.mocked(fetchMetadata).mockResolvedValue({

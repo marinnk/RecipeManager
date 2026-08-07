@@ -268,6 +268,30 @@ describe("RecipeEditForm", () => {
     expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
+  it("タイトル削除ボタンでタイトルだけ空にできる", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "タイトルを削除" }));
+
+    expect(screen.getByLabelText("タイトル")).toHaveValue("");
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("美味しい");
+  });
+
+  it("メモ削除ボタンでメモだけ空にできる", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRecipe).mockResolvedValue(recipe);
+    render(<RecipeEditForm recipeId={1} />);
+
+    await screen.findByLabelText("タイトル");
+    await user.click(screen.getByRole("button", { name: "メモを削除" }));
+
+    expect(screen.getByLabelText("メモ（任意）")).toHaveValue("");
+    expect(screen.getByLabelText("タイトル")).toHaveValue("肉じゃが");
+  });
+
   it("既存URLを変更せずにフォーカスが外れても自動取得しない", async () => {
     const user = userEvent.setup();
     vi.mocked(getRecipe).mockResolvedValue(recipe);

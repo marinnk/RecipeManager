@@ -226,13 +226,23 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
 
       <div className={styles.field}>
         <label htmlFor="title">タイトル</label>
-        <input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
+        <div className={styles.titleRow}>
+          <input
+            id="title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            aria-label="タイトルを削除"
+            onClick={() => setTitle("")}
+            disabled={!title.trim()}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
@@ -258,11 +268,21 @@ function RecipeEditFormFields({ recipeId, recipe }: FieldsProps) {
 
       <div className={styles.field}>
         <label htmlFor="memo">メモ（任意）</label>
-        <textarea
-          id="memo"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-        />
+        <div className={styles.memoRow}>
+          <textarea
+            id="memo"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
+          <button
+            type="button"
+            aria-label="メモを削除"
+            onClick={() => setMemo("")}
+            disabled={!memo.trim()}
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className={styles.field}>
