@@ -54,4 +54,18 @@ class MetadataFetchServiceTest {
         assertThrows<MetadataFetchException> { service.fetch("file:///etc/passwd") }
         verify(exactly = 0) { youtubeOembedClient.isYoutubeUrl(any()) }
     }
+
+    @Test
+    fun `前後に空白が入っていてもtrimしてから判定・取得する`() {
+        val url = "https://www.youtube.com/watch?v=xxxx"
+        every { youtubeOembedClient.isYoutubeUrl(url) } returns true
+        every { youtubeOembedClient.fetch(url) } returns
+            OembedResult(title = "肉じゃがの作り方", thumbnailUrl = "https://i.ytimg.com/vi/xxxx/hqdefault.jpg")
+
+        val response = service.fetch("  $url  ")
+
+        assertEquals("肉じゃがの作り方", response.title)
+        verify(exactly = 1) { youtubeOembedClient.isYoutubeUrl(url) }
+        verify(exactly = 1) { youtubeOembedClient.fetch(url) }
+    }
 }

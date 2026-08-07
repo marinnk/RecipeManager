@@ -57,7 +57,7 @@ export function RecipeRegisterForm() {
   };
 
   const handleFetchMetadata = async () => {
-    const result = await fetchMetadata(url);
+    const result = await fetchMetadata(url.trim());
     if (result) {
       setTitle(result.title);
       setThumbnailUrl(result.thumbnailUrl ?? undefined);
