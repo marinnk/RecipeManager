@@ -19,25 +19,27 @@
 
 独自ドメインは取得せず、CloudFrontが自動で割り当てるドメイン（`https://xxxxxxxxxx.cloudfront.net`）をそのまま使う。この場合、CloudFront標準の証明書でHTTPS化されるため、ACM証明書を別途発行する必要はない。
 
-フロントエンド（Next.js）とバックエンド（Spring Boot）は同一のEC2インスタンス上でDockerコンテナとして動かし、CloudFrontがパスに応じてどちらのコンテナに転送するかを振り分ける。ALB（ロードバランサー）は使わず、CloudFrontから直接EC2（カスタムオリジン）に転送することで構成をシンプルにし、コストも抑える。
+フロントエンド（Next.js）とバックエンド（Spring Boot）は同一のEC2インスタンス上でDockerコンテナとして動かす。ALB（ロードバランサー）は使わず、CloudFrontから直接EC2（カスタムオリジン）に転送することで構成をシンプルにし、コストも抑える。
+
+CloudFrontのオリジンはNext.jsコンテナ（:3000）のみとする。`/api/*` へのリクエストもCloudFrontから見ればNext.jsコンテナ宛だが、Next.js側の設定（rewrites）でSpring Bootコンテナ（:8080）へ内部転送される。Spring BootコンテナはCloudFrontや外部からは直接到達できず、EC2内部（Dockerネットワーク）からのみアクセス可能にする。これは、EC2のセキュリティグループでCloudFrontのIPレンジ（マネージドプレフィックスリスト、約45件）を2ポート分（3000・8080）登録しようとすると、AWSのセキュリティグループのルール数上限（デフォルト60）を超えてしまうために採用した構成だが、結果としてSpring Bootを外部に一切公開しなくて済むという利点もある。
 
 ```mermaid
 flowchart TB
     User["ユーザーのブラウザ"] -- HTTPS --> CF["CloudFront<br/>(自動割り当てドメイン)"]
 
     subgraph EC2["EC2インスタンス（Docker）"]
-        NextJS["Next.jsコンテナ<br/>:3000"]
-        Spring["Spring Bootコンテナ<br/>:8080"]
+        NextJS["Next.jsコンテナ<br/>:3000（CloudFrontから到達可）"]
+        Spring["Spring Bootコンテナ<br/>:8080（EC2内部からのみ到達可）"]
     end
 
-    CF -- "/ 配下（デフォルト）" --> NextJS
-    CF -- "/api/* 配下" --> Spring
+    CF -- "/ 配下・/api/* 配下（すべて）" --> NextJS
+    NextJS -- "/api/* をrewritesで内部転送" --> Spring
     Spring -- JDBC --> RDS[("RDS (MySQL)")]
     Spring -- "情報取得" --> External["YouTube oEmbed / 各サイトのOGP"]
 ```
 
 - ブラウザ上のNext.jsが `/api/...` へリクエストすることで、Spring Bootのレシピ登録・取得・更新・削除APIを呼び出す（詳細は次章のAPI設計を参照）
-- EC2とRDSは同一VPC内の同じ（パブリック）サブネットに置き、RDSのセキュリティグループは「EC2からの3306番ポートのみ許可」とすることで、NAT Gatewayを使わずに安全性を確保する
+- EC2とRDSは同一VPC内のパブリックサブネットに置き、RDSのセキュリティグループは「EC2からの3306番ポートのみ許可」とすることで、NAT Gatewayを使わずに安全性を確保する
 
 ## 3. 画面設計・画面遷移
 
@@ -145,15 +147,15 @@ flowchart TB
 
 | SG名 | アタッチ先 | インバウンドルール | 用途 |
 |------|-----------|---------------------|------|
-| ec2-sg | EC2 | 22番（SSH、自分のIPアドレスのみ許可）、3000番・8080番（CloudFrontのマネージドプレフィックスリスト `com.amazonaws.global.cloudfront.origin-facing` からのみ許可） | SSHでの管理接続と、CloudFront経由のアプリアクセスのみを許可し、それ以外からEC2への直接アクセスを遮断する |
+| ec2-sg | EC2 | 22番（SSH、自分のIPアドレスのみ許可）、3000番（Next.js。CloudFrontのマネージドプレフィックスリスト `com.amazonaws.global.cloudfront.origin-facing` からのみ許可） | SSHでの管理接続と、CloudFront経由のアプリアクセスのみを許可し、それ以外からEC2への直接アクセスを遮断する。8080番（Spring Boot）はEC2内部（Dockerネットワーク）からのみ到達すればよいため、インバウンドルールを設けない（「2. システム構成図」参照） |
 | rds-sg | RDS | 3306番（送信元をec2-sgに限定） | EC2以外からのDB直接アクセスを禁止する（「2. システム構成図」の方針と一致） |
 
 ### 7.3 主要リソースサイズ
 
 | リソース | サイズ | 備考 |
 |----------|--------|------|
-| EC2 | t2.micro | 無料枠対象（12か月間、月750時間まで無料） |
-| RDS | db.t3.micro（MySQL 8.4） | 無料枠対象（12か月間、月750時間・ストレージ20GBまで無料） |
+| EC2 | t3.micro | 無料枠対象。無料枠対象のインスタンスタイプはAWSアカウントによって異なり、本アカウントではt2.microは対象外だったため、`aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true` で確認できたt3.microを採用した |
+| RDS | db.t3.micro（MySQL 8.4） | 無料枠対象（月750時間・ストレージ20GBまで無料）。自動バックアップの保持期間は無料枠アカウントでは上限があり、最小限の1日としている（「9. 非機能要件への対応方針」参照） |
 
 ## 8. API設計
 
@@ -236,7 +238,7 @@ curl -F "file=@photo.jpg" http://localhost:8080/api/images
 
 - **想定利用者・同時アクセス数**: 開発者本人および評価者による利用を想定し、大量の同時アクセスは想定しない
 - **可用性**: EC2・RDSともに単一AZ・単体構成のため、インスタンス障害時にはサービスが停止する。学校課題の規模を踏まえ、マルチAZ構成などの高可用性対応は行わない（詳細は「7. AWS構成方針」を参照）
-- **バックアップ**: RDSの自動バックアップ機能（デフォルトの保持期間）を有効化する。障害・誤操作時はここから復元する
+- **バックアップ**: RDSの自動バックアップ機能を有効化する。保持期間は、無料枠アカウントでの上限を踏まえ1日としている（本来はデフォルトの7日としたかったが、実装時に無料枠の制約で作成に失敗したため縮小した）。障害・誤操作時はここから復元する
 
 ## 10. デプロイ・CI/CD方針
 
