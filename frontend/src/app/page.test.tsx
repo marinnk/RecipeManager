@@ -11,6 +11,7 @@ describe("Home", () => {
       recipes: [],
       isLoading: true,
       error: null,
+      refetch: vi.fn(),
     });
 
     render(<Home />);
