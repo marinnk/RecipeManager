@@ -4,6 +4,10 @@ YouTubeやレシピサイトに掲載されているレシピを、自分用に�
 
 スクールの課題として開発しており、以前の課題（Java + Spring Boot / React + TypeScript）とは異なる技術スタックを使い、AWSの無料枠に収まる構成にすることが条件です。
 
+## 公開URL
+
+https://d1fcph5tz1bfn4.cloudfront.net
+
 ## 技術スタック
 
 | レイヤー | 採用技術 |
@@ -61,4 +65,30 @@ cd backend
 cd frontend
 npm run lint
 npm run test
+```
+
+## インフラ構築・デプロイ
+
+AWSインフラ（VPC・EC2・RDS・CloudFrontなど）はTerraformで構築している。構築手順は [infra/terraform/README.md](infra/terraform/README.md) を参照。
+
+EC2上へのアプリのデプロイ手順（Terraformで構築済みのEC2が前提）:
+
+```sh
+# 1. EC2にSSH接続する
+ssh -i ~/.ssh/recipemanager_ec2 ec2-user@<EC2のパブリックIP>
+
+# 2. 初回のみ: リポジトリをクローンする（2回目以降は git pull）
+git clone https://github.com/marinnk/RecipeManager.git app
+cd app
+
+# 3. 初回のみ: 本番用の .env を作成する（RDSの接続情報。Gitには含めない）
+cat > .env <<EOF
+DB_HOST=<RDSのエンドポイント（terraform output rds_endpointで確認）>
+DB_NAME=<RDSのDB名>
+DB_USERNAME=<RDSのユーザー名>
+DB_PASSWORD=<RDSのパスワード>
+EOF
+
+# 4. ビルド・起動する
+docker compose -f docker-compose.prod.yml up -d --build
 ```

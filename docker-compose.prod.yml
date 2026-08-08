@@ -1,0 +1,32 @@
+# 本番（EC2）用のCompose定義。docker-compose.yml（ローカル開発用）とは異なり、
+# DBはコンテナで持たず、Terraformで構築済みのRDSに接続する
+# （infra/terraform/rds.tf 参照）。
+#
+# 使い方（EC2上）:
+#   1. このディレクトリに .env を作成し、DB_HOST・DB_NAME・DB_USERNAME・DB_PASSWORD を
+#      RDSの値に合わせて設定する（Gitには含めない）
+#   2. docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_INTERNAL_URL: http://backend:8080
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
