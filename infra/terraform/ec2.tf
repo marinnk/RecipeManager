@@ -21,8 +21,11 @@ resource "aws_key_pair" "this" {
 }
 
 resource "aws_instance" "this" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro" # 無料枠対象
+  ami = data.aws_ami.al2023.id
+  # 無料枠対象。AWSアカウントによって無料枠対象のインスタンスタイプが異なり、このアカウントでは
+  # t2.microは対象外だったため、`aws ec2 describe-instance-types --filters
+  # Name=free-tier-eligible,Values=true` で確認できたt3.microを使う
+  instance_type          = "t3.micro"
   subnet_id              = aws_subnet.public_a.id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   key_name               = aws_key_pair.this.key_name

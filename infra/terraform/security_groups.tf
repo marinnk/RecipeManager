@@ -7,8 +7,9 @@ data "aws_ec2_managed_prefix_list" "cloudfront" {
 }
 
 resource "aws_security_group" "ec2" {
-  name        = "ec2-sg"
-  description = "SSH（自分のIPのみ）とCloudFrontからのアプリアクセスのみを許可する"
+  name = "ec2-sg"
+  # GroupDescriptionはASCII文字のみ許可されるため英語で記載する
+  description = "Allow SSH from my IP and app access from CloudFront only"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -19,18 +20,15 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = ["${var.my_ip}/32"]
   }
 
+  # CloudFrontはfrontend(:3000)のみをオリジンとする。backend(:8080)へのアクセスは
+  # frontendコンテナがDockerネットワーク内部から呼び出すのみで、外部には公開しない
+  # （プレフィックスリストは45件のIPレンジを含み、1ルールあたり1件としてではなく件数分が
+  #   セキュリティグループのルール上限（デフォルト60）にカウントされるため、2ポート分登録すると
+  #   上限を超過してしまう。1ポートに絞ることで上限内に収める）
   ingress {
     description     = "Next.js (frontend) from CloudFront"
     from_port       = 3000
     to_port         = 3000
-    protocol        = "tcp"
-    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
-  }
-
-  ingress {
-    description     = "Spring Boot (backend API) from CloudFront"
-    from_port       = 8080
-    to_port         = 8080
     protocol        = "tcp"
     prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
@@ -48,8 +46,9 @@ resource "aws_security_group" "ec2" {
 }
 
 resource "aws_security_group" "rds" {
-  name        = "rds-sg"
-  description = "EC2以外からのDB直接アクセスを禁止する"
+  name = "rds-sg"
+  # GroupDescriptionはASCII文字のみ許可されるため英語で記載する
+  description = "Deny direct DB access except from EC2"
   vpc_id      = aws_vpc.this.id
 
   ingress {

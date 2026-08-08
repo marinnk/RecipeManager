@@ -1,5 +1,10 @@
 # docs/basic-design.md「2. システム構成図」に対応
-# パスに応じて frontend（Next.js, :3000）と backend（Spring Boot, :8080）へ振り分ける
+# CloudFrontのオリジンはfrontend（Next.js, :3000）のみ。"/api/*" はNext.js側のrewrites設定
+# （frontend/next.config.ts）でbackend（Spring Boot, :8080）へ内部転送される。
+# backendをCloudFrontから直接呼び出さないのは、EC2のセキュリティグループでCloudFrontの
+# マネージドプレフィックスリスト（IPレンジ）を2ポート分登録すると、1セキュリティグループ
+# あたりのルール数上限を超えてしまうため（詳細はsecurity_groups.tfのコメント参照）。
+# 副次的に、backendを外部に一切公開しなくて済むというメリットもある。
 
 resource "aws_cloudfront_distribution" "this" {
   enabled         = true
@@ -19,42 +24,10 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  origin {
-    domain_name = local.ec2_public_dns
-    origin_id   = "backend"
-
-    custom_origin_config {
-      http_port              = 8080
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  # "/" 配下（デフォルト）→ Next.js
+  # "/api/*" もこのビヘイビアを通り、Next.jsのrewritesでbackendへ転送される。
+  # 静的ページとAPIレスポンスが混在するため、CloudFront側ではキャッシュしない
   default_cache_behavior {
     target_origin_id       = "frontend"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-
-    forwarded_values {
-      query_string = true
-      cookies {
-        forward = "none"
-      }
-    }
-
-    # アプリの内容が更新されてもすぐ反映されるよう、CloudFront側ではキャッシュしない
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
-  }
-
-  # "/api/*" 配下 → Spring Boot
-  ordered_cache_behavior {
-    path_pattern           = "/api/*"
-    target_origin_id       = "backend"
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
@@ -67,7 +40,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
     }
 
-    # レシピの登録・更新・削除を即座に反映させるため、APIレスポンスはキャッシュしない
+    # アプリの内容やAPIレスポンスが即座に反映されるよう、CloudFront側ではキャッシュしない
     min_ttl     = 0
     default_ttl = 0
     max_ttl     = 0

@@ -24,8 +24,10 @@ resource "aws_db_instance" "this" {
   # 公開エンドポイントは持たせず、ec2-sgからの3306番のみに閉じる
   publicly_accessible = false
 
-  multi_az                = false # 単一AZ構成（docs/basic-design.md「9. 非機能要件」参照）
-  backup_retention_period = 7     # 自動バックアップを有効化（docs/basic-design.md「9. 非機能要件」参照）
+  multi_az = false # 単一AZ構成（docs/basic-design.md「9. 非機能要件」参照）
+  # 自動バックアップを有効化（docs/basic-design.md「9. 非機能要件」参照）。無料枠アカウントでは
+  # 保持期間に上限があり、7日を指定すると作成に失敗したため、許容される最小限の1日にしている
+  backup_retention_period = 1
 
   skip_final_snapshot = true # 個人学習用のため、削除時の最終スナップショットは省略する
   deletion_protection = false
