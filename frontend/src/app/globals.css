@@ -232,17 +232,6 @@ textarea {
   font-size: 0.875rem;
 }
 
-.eyebrow {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  font-weight: 600;
-  margin-bottom: 0.2rem;
-}
-
-/* 見出し(eyebrow + h1)とその下のコンテンツの間の余白をまとめて確保する */
 .page-intro {
   margin-bottom: 1.5rem;
 }
