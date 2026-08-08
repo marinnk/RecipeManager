@@ -51,7 +51,7 @@ RDSを複数のAZ（Availability Zone＝独立したデータセンターの単�
 
 - **EC2**: 仮想サーバー1台分
 - **RDS**: AWSが管理してくれるDBサーバー
-- **microクラス**: CPU・メモリが最小のプラン。t2.micro/t3.microなどはAWSアカウント作成後12ヶ月間無料になる対象なので、これを選ぶことでコストを抑えている
+- **microクラス**: CPU・メモリが最小のプラン。t2.micro/t3.microなどはAWSアカウント作成後一定期間無料になる対象なので、これを選ぶことでコストを抑えている。ただし無料枠の対象インスタンスタイプはAWSアカウントによって異なる（本プロジェクトでは、実際にTerraformで構築する際にt2.microが無料枠対象外と判明し、t3.microに変更した）。`aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true` で自分のアカウントの対象を確認できる
 
 ## デプロイ
 

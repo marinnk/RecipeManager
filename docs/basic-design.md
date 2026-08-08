@@ -245,8 +245,11 @@ curl -F "file=@photo.jpg" http://localhost:8080/api/images
 - **テスト**: GitHub Actionsを用い、任意のブランチへのpush時にバックエンド（Kotlin/Spring Boot）・フロントエンド（Next.js）双方の自動テストを実行する
 - **デプロイ**: 自動化はせず、開発者が明示的に操作したタイミングでのみ本番のEC2へ反映する
   1. EC2にSSH接続する
-  2. 最新コードをpull（またはDockerイメージをビルド）する
-  3. `docker compose up -d --build` でコンテナを再起動する
+  2. 最新コードをpull（初回は`git clone`）する
+  3. 本番用の`.env`（RDSの接続情報。`DB_HOST`はRDSのエンドポイントを指す）を用意する
+  4. `docker compose -f docker-compose.prod.yml up -d --build` でコンテナを再起動する
+
+  ローカル開発用の`docker-compose.yml`はDBもコンテナ（MySQL）として持つが、本番ではDBはRDSを使うため、本番専用の`docker-compose.prod.yml`を別途用意している（backend/frontendのみを含み、DBコンテナは持たない）。具体的な手順は[README.md](../README.md#インフラ構築デプロイ)を参照
 - **採用理由**: pushのたびに自動でEC2へ反映すると、動作確認中の未完成な変更がそのまま本番に出てしまうリスクがある。個人開発規模のため、テストの自動化によるフィードバックの速さは活かしつつ、デプロイは意識的なタイミングで行う
 
 ## 11. 例外処理方針
