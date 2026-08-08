@@ -7,7 +7,6 @@ export default function Home() {
     <main>
       <div className={styles.header}>
         <div>
-          <span className="eyebrow">マイレシピ</span>
           <h1>RecipeManager</h1>
         </div>
         <Link href="/recipes/new" className="btn btn-primary">
