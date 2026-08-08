@@ -1,0 +1,18 @@
+# このファイルをコピーして terraform.tfvars を作り、実際の値を設定する
+# terraform.tfvars は .gitignore 済みでGitには含まれない
+#
+#   cp terraform.tfvars.example terraform.tfvars
+
+aws_region = "ap-northeast-1"
+
+# `curl https://checkip.amazonaws.com` で確認できる自分のグローバルIPアドレス
+my_ip = "203.0.113.1"
+
+ssh_public_key_path = "~/.ssh/recipemanager_ec2.pub"
+
+db_name     = "recipemanager"
+db_username = "recipemanager"
+db_password = "CHANGE_ME"
+
+budget_limit_usd   = 5
+budget_alert_email = "you@example.com"
