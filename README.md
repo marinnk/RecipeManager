@@ -6,7 +6,17 @@ YouTubeやレシピサイトに掲載されているレシピを、自分用に�
 
 ## 公開URL
 
-https://d1fcph5tz1bfn4.cloudfront.net
+AWSへのデプロイ・動作確認は完了済みだが、コストを抑えるため現在はインフラを`terraform destroy`で削除しており、公開URLは動いていない（インフラの再構築手順は [infra/terraform/README.md](infra/terraform/README.md) を参照）。
+
+## 使い方
+
+| レシピ一覧 | レシピ登録 | レシピ詳細 |
+|---|---|---|
+| ![レシピ一覧画面](docs/screenshots/list.png) | ![レシピ登録画面](docs/screenshots/new.png) | ![レシピ詳細画面](docs/screenshots/detail.png) |
+
+- **一覧画面**: 登録済みレシピをカードで一覧表示。タイトル検索・タグ絞り込みができる
+- **登録画面**: URLを入力すると、タイトル・サムネイルを自動取得（失敗した場合は手動入力・画像アップロードで代替）
+- **詳細画面**: メモ・タグとともにレシピを表示し、元サイトへのリンク・編集・削除ができる
 
 ## 技術スタック
 
